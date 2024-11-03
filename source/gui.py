@@ -61,14 +61,14 @@ def save_network_parameters():
 def add_sub_network():
 	type_of_circuit = type_of_circuit_combobox.get()
 	type_of_connection = type_of_connection_combobox.get()
-	element_A = element_A_combobox.get()
-	element_A_value = element_A_entry.get()
-	element_B = element_B_combobox.get()
-	element_B_value = element_B_entry.get()
-	element_C = element_C_combobox.get()
-	element_C_value = element_C_entry.get()
+	element_a = element_A_combobox.get()
+	element_a_value = element_A_entry.get()
+	element_b = element_B_combobox.get()
+	element_b_value = element_B_entry.get()
+	element_c = element_C_combobox.get()
+	element_c_value = element_C_entry.get()
 
-	if 0:
+	if type_of_circuit == '':
 		pass
 	else:
 		global excel_circuit_counter_row
@@ -82,18 +82,15 @@ def add_sub_network():
 		excel_network_info_sheet.cell(row=excel_circuit_counter_row, column=cfg.EXCEL_COLUMN_A, value='Network ' + str(counter))
 		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_B, value = type_of_connection)
 		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_C, value = type_of_circuit)
-		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_D, value = element_A)
-		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_E, value = element_A_value)
-		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_F, value = element_B)
-		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_G, value = element_B_value)
-		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_H, value = element_C)
-		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_I, value = element_C_value)
+		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_D, value = element_a)
+		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_E, value = element_a_value)
+		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_F, value = element_b)
+		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_G, value = element_b_value)
+		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_H, value = element_c)
+		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_I, value = element_c_value)
 		excel_workbook.save(cfg.EXCEL_NETWORK_PARAMETERS_FILE)
 
 		excel_circuit_counter_row = excel_circuit_counter_row + 1
-
-		#counter = counter_of_sub_networks.get()
-		#counter = counter + 1
 
 		counter_of_sub_networks.set(counter)
 		reset_1.set('')

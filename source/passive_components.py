@@ -18,20 +18,20 @@ class SeriesImpedanceCircuit:
         self.frecuencies = frecuencies
 
     # Private class methods
-    def __calculate_impedances(self):
-        impedance = 0
-
-        for frecuency in self.frecuencies:
-            if self.type_of_element == 'Inductor':
-                impedance = 2 * np.pi * int(frecuency) * self.element_value
-                self.parameter_B.append(impedance)
-
-            elif self.type_of_element == 'Capacitor':
-                impedance = 1 / (2 * np.pi * int(frecuency) * self.element_value)
-                self.parameter_B.append(impedance)
-
-            else:
-                self.parameter_B = 1
+    # def __calculate_impedances(self):
+    #     impedance = 0
+    #
+    #     for frecuency in self.frecuencies:
+    #         if self.type_of_element == 'Inductor':
+    #             impedance = 2 * np.pi * int(frecuency) * self.element_value
+    #             self.parameter_B.append(impedance)
+    #
+    #         elif self.type_of_element == 'Capacitor':
+    #             impedance = 1 / (2 * np.pi * int(frecuency) * self.element_value)
+    #             self.parameter_B.append(impedance)
+    #
+    #         else:
+    #             self.parameter_B = 1
 
     # Public class methods
     def get_type_of_element(self):
