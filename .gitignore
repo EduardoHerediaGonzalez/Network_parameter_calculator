@@ -1,3 +1,9 @@
 .DS_Store
 .idea/
+source/__pycache__/common_two_port_circuits.cpython-313.pyc
 source/__pycache__/config_parameters.cpython-313.pyc
+source/__pycache__/gui.cpython-313.pyc
+source/__pycache__/passive_components.cpython-313.pyc
+source/__pycache__/test.cpython-313.pyc
+source/test.py
+source/Network parameters.xlsx
