@@ -129,18 +129,18 @@ def calculate_parameters():
 	network_counter = 0
 	networks = []
 
-	while excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW_NETWORK_ID + network_counter, column=cfg.EXCEL_COLUMN_A).value != None:
+	while excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW_NETWORK_ID + network_counter, column=cfg.EXCEL_COLUMN_A).value != '':
 		network_id = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW_NETWORK_ID + network_counter, column=cfg.EXCEL_COLUMN_A).value
 		network_counter = network_counter + 1
 
 
 	start_frequency = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW, column=cfg.EXCEL_COLUMN_B).value
 	value, prefix = start_frequency.split()
-	start_frequency = int(value) * cfg.HERTZ_PREFIXES_TO_VALUE[prefix]
+	start_frequency = int(value) * cfg.FREQUENCY_PREFIXES_TO_VALUE[prefix]
 
 	end_frequency = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 1, column=cfg.EXCEL_COLUMN_B).value
 	value, prefix = end_frequency.split()
-	end_frequency = int(value) * cfg.HERTZ_PREFIXES_TO_VALUE[prefix]
+	end_frequency = int(value) * cfg.FREQUENCY_PREFIXES_TO_VALUE[prefix]
 
 	frequency_points = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 2, column=cfg.EXCEL_COLUMN_B).value
 	frequency_points = frequency_points.split(',')
@@ -151,9 +151,9 @@ def calculate_parameters():
 
 	value = excel_network_info_sheet.cell(row=10, column=cfg.EXCEL_COLUMN_A).value
 
-	#while excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW_NETWORK_ID, column=cfg.EXCEL_COLUMN_A) != None:
-
-	#for frequency in frequency_points:
+	# while excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW_NETWORK_ID, column=cfg.EXCEL_COLUMN_A) != None:
+	#
+	# for frequency in frequency_points:
 
 
 
@@ -164,7 +164,7 @@ def get_total_frequency_points(start_frequency, frequency_points, end_frequency)
 
 	for frequency_point in frequency_points:
 		value, prefix = frequency_point.split()
-		frequency_point = int(value) * cfg.HERTZ_PREFIXES_TO_VALUE[prefix]
+		frequency_point = int(value) * cfg.FREQUENCY_PREFIXES_TO_VALUE[prefix]
 
 		frequency_points_temp.append(frequency_point)
 
@@ -178,7 +178,6 @@ def get_total_frequency_points(start_frequency, frequency_points, end_frequency)
 	frequency_range.append(end_frequency)
 
 	return frequency_range
-
 
 
 mainWindow = tk.Tk()
@@ -217,7 +216,7 @@ end_frequency_combobox.grid(row=row, column=2)
 
 row = row + 1
 
-frequency_point_to_analyze_label = ttk.Label(mainWindow, text='frequency point to analyze')
+frequency_point_to_analyze_label = ttk.Label(mainWindow, text='Frequency point to analyze')
 frequency_point_to_analyze_label.grid(row=row, column=0)
 frequency_point_to_analyze_entry = ttk.Entry(mainWindow, textvariable=reset_frequency_point_to_analyze_entry)
 frequency_point_to_analyze_entry.grid(row=row, column=1)
@@ -299,7 +298,7 @@ row = row + 1
 
 type_of_connection_label = ttk.Label(mainWindow, text='Type of connection')
 type_of_connection_label.grid(row=row, column=0)
-type_of_connection_combobox = ttk.Combobox(mainWindow, values=cfg.CONNECTION_TYPES, state='disable', textvariable=reset_type_of_connection_combobox)
+type_of_connection_combobox = ttk.Combobox(mainWindow, values=cfg.INTERCONNECTION_TYPES, state='disable', textvariable=reset_type_of_connection_combobox)
 type_of_connection_combobox.grid(row=row, column=1)
 
 row = row + 1
