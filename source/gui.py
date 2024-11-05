@@ -96,7 +96,7 @@ def add_sub_network():
 		if type_of_connection == '':
 			type_of_connection = 'Cascade'
 
-		excel_base_template_network_info_sheet.cell(row=excel_circuit_counter_row, column=cfg.EXCEL_COLUMN_A, value='Network ' + str(counter))
+		excel_base_template_network_info_sheet.cell(row=excel_circuit_counter_row, column=cfg.EXCEL_COLUMN_A, value=str(counter))
 		excel_base_template_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_B, value = type_of_connection)
 		excel_base_template_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_C, value = type_of_circuit)
 		excel_base_template_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_D, value = element_a)
@@ -124,18 +124,65 @@ def add_sub_network():
 
 
 def calculate_parameters():
-	# excel_network_parameters_workbook = openpyxl.load_workbook(filename= cfg.EXCEL_NETWORK_PARAMETERS_FILE)
-	# excel_network_info_sheet = excel_network_parameters_workbook[cfg.EXCEL_NETWORK_INFO_SHEET]
-	#
-	# start_frequency = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW, column=cfg.EXCEL_COLUMN_B).value
-	# end_frequency = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 1, column=cfg.EXCEL_COLUMN_B).value
-	# frequency_points = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 2, column=cfg.EXCEL_COLUMN_B).value
-	# parameters_to_calculate = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 5, column=cfg.EXCEL_COLUMN_B).value
-	pass
+	excel_network_parameters_workbook = load_workbook(filename= cfg.EXCEL_NETWORK_PARAMETERS_FILE)
+	excel_network_info_sheet = excel_network_parameters_workbook[cfg.EXCEL_NETWORK_INFO_SHEET]
+	network_counter = 0
+	networks = []
+
+	while excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW_NETWORK_ID + network_counter, column=cfg.EXCEL_COLUMN_A).value != None:
+		network_id = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW_NETWORK_ID + network_counter, column=cfg.EXCEL_COLUMN_A).value
+		network_counter = network_counter + 1
+
+
+	start_frequency = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW, column=cfg.EXCEL_COLUMN_B).value
+	value, prefix = start_frequency.split()
+	start_frequency = int(value) * cfg.HERTZ_PREFIXES_TO_VALUE[prefix]
+
+	end_frequency = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 1, column=cfg.EXCEL_COLUMN_B).value
+	value, prefix = end_frequency.split()
+	end_frequency = int(value) * cfg.HERTZ_PREFIXES_TO_VALUE[prefix]
+
+	frequency_points = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 2, column=cfg.EXCEL_COLUMN_B).value
+	frequency_points = frequency_points.split(',')
+
+	frequency_points = get_total_frequency_points(start_frequency, frequency_points, end_frequency)
+
+	parameters_to_calculate = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 5, column=cfg.EXCEL_COLUMN_B).value
+
+	value = excel_network_info_sheet.cell(row=10, column=cfg.EXCEL_COLUMN_A).value
+
+	#while excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW_NETWORK_ID, column=cfg.EXCEL_COLUMN_A) != None:
+
+	#for frequency in frequency_points:
+
+
+
+
+def get_total_frequency_points(start_frequency, frequency_points, end_frequency):
+	frequency_points_temp = []
+	frequency_range = []
+
+	for frequency_point in frequency_points:
+		value, prefix = frequency_point.split()
+		frequency_point = int(value) * cfg.HERTZ_PREFIXES_TO_VALUE[prefix]
+
+		frequency_points_temp.append(frequency_point)
+
+	frequency_points = frequency_points_temp
+
+	frequency_range.append(start_frequency)
+
+	for frequency in frequency_points:
+		frequency_range.append(frequency)
+
+	frequency_range.append(end_frequency)
+
+	return frequency_range
+
 
 
 mainWindow = tk.Tk()
-mainWindow.title("Two-port network parameter calculator")
+mainWindow.title("Network parameter calculator")
 mainWindow.geometry('800x600')
 
 counter_of_sub_networks = tk.IntVar(mainWindow, 0)
@@ -300,7 +347,7 @@ add_sub_network_button.grid(row=row, column=2)
 
 row = row + 1
 
-calculate_parameters_button = ttk.Button(mainWindow, text='Calculate parameters', state='disable', command=calculate_parameters)
+calculate_parameters_button = ttk.Button(mainWindow, text='Calculate parameters', state='normal', command=calculate_parameters)
 calculate_parameters_button.grid(row=row, column=2)
 
 mainWindow.mainloop()

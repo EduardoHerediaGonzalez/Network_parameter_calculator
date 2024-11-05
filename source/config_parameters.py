@@ -7,6 +7,7 @@ RESISTOR_PREFIXES = ['\u03A9', 'K\u03A9', 'M\u03A9', 'G\u03A9']
 CAPACITOR_PREFIXES = ['pF', 'nF', 'uF']
 INDUCTOR_PREFIXES = ['pH', 'nH', 'uH']
 NETWORK_PARAMETERS = ['Z', 'Y', 'ABCD']
+HERTZ_PREFIXES_TO_VALUE = {'Hz': 1, 'KHz': 1000, 'MHz': 1e6, 'GHz': 1e9}
 EXCEL_BASE_TEMPLATE_FILE = 'Base template.xlsx'
 EXCEL_NETWORK_PARAMETERS_FILE = 'Network parameters.xlsx'
 EXCEL_NETWORK_INFO_SHEET = 'Network_info'
