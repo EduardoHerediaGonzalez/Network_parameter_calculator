@@ -3,9 +3,18 @@ from tkinter import ttk
 
 from openpyxl import *
 import config_parameters as cfg
+from source.common_two_port_circuits import *
+
+SUB_NETWORK_DEFAULT_CONNECTION = 'Cascade connection'
 
 excel_base_template_workbook = load_workbook(filename=cfg.EXCEL_BASE_TEMPLATE_FILE)
-excel_base_template_network_info_sheet = excel_base_template_workbook[cfg.EXCEL_NETWORK_INFO_SHEET]
+excel_base_template_workbook.save(cfg.EXCEL_NETWORK_PARAMETERS_FILE)
+excel_base_template_workbook.close()
+del excel_base_template_workbook
+
+excel_network_parameters_workbook = load_workbook(filename= cfg.EXCEL_NETWORK_PARAMETERS_FILE)
+excel_network_info_sheet = excel_network_parameters_workbook[cfg.EXCEL_NETWORK_INFO_SHEET]
+
 excel_circuit_counter_row = cfg.EXCEL_INITIAL_ROW_NETWORK_ID
 frequency_points_to_analyzed = list()
 
@@ -34,10 +43,11 @@ def save_frequency_parameters():
 		pass
 	else:
 		frequency_points = ','.join(frequency_points_to_analyzed)
-		excel_base_template_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW, column=cfg.EXCEL_COLUMN_B).value = start_frequency + ' ' + start_frequency_prefix
-		excel_base_template_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 1, column=cfg.EXCEL_COLUMN_B).value = end_frequency + ' ' + end_frequency_prefix
-		excel_base_template_network_info_sheet.cell(row =cfg.EXCEL_INITIAL_ROW + 2, column = cfg.EXCEL_COLUMN_B).value = frequency_points
-		excel_base_template_workbook.save(cfg.EXCEL_NETWORK_PARAMETERS_FILE)
+		excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW, column=cfg.EXCEL_COLUMN_B).value = start_frequency + ' ' + start_frequency_prefix
+		excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 1, column=cfg.EXCEL_COLUMN_B).value = end_frequency + ' ' + end_frequency_prefix
+		excel_network_info_sheet.cell(row =cfg.EXCEL_INITIAL_ROW + 2, column = cfg.EXCEL_COLUMN_B).value = frequency_points
+		excel_network_parameters_workbook.save(cfg.EXCEL_NETWORK_PARAMETERS_FILE)
+
 		start_frequency_entry.config(state='disable')
 		start_frequency_combobox.config(state = 'disable')
 		end_frequency_entry.config(state='disable')
@@ -58,14 +68,15 @@ def save_network_parameters():
 	if type_of_network == '' or parameters_to_calculate == '':
 		pass
 	else:
-		excel_base_template_network_info_sheet.cell(row =cfg.EXCEL_INITIAL_ROW + 4, column = cfg.EXCEL_COLUMN_B).value = type_of_network
-		excel_base_template_network_info_sheet.cell(row =cfg.EXCEL_INITIAL_ROW + 5, column = cfg.EXCEL_COLUMN_B).value = parameters_to_calculate
-		excel_base_template_workbook.save(cfg.EXCEL_NETWORK_PARAMETERS_FILE)
+		excel_network_info_sheet.cell(row =cfg.EXCEL_INITIAL_ROW + 4, column = cfg.EXCEL_COLUMN_B).value = type_of_network
+		excel_network_info_sheet.cell(row =cfg.EXCEL_INITIAL_ROW + 5, column = cfg.EXCEL_COLUMN_B).value = parameters_to_calculate
+		excel_network_parameters_workbook.save(cfg.EXCEL_NETWORK_PARAMETERS_FILE)
+
 		type_of_network_combobox.config(state = 'disable')
 		parameters_to_calculate_combobox.config(state = 'disable')
 		save_network_parameters_button.config(state = 'disable')
 		type_of_circuit_combobox.config(state = 'normal')
-		type_of_connection_combobox.config(state = 'normal')
+		type_of_interconnection_combobox.config(state ='normal')
 		element_A_combobox.config(state = 'normal')
 		element_A_entry.config(state = 'normal')
 		element_B_combobox.config(state = 'normal')
@@ -77,7 +88,7 @@ def save_network_parameters():
 
 def add_sub_network():
 	type_of_circuit = type_of_circuit_combobox.get()
-	type_of_connection = type_of_connection_combobox.get()
+	type_of_interconnection = type_of_interconnection_combobox.get()
 	element_a = element_A_combobox.get()
 	element_a_value = element_A_entry.get()
 	element_b = element_B_combobox.get()
@@ -93,19 +104,19 @@ def add_sub_network():
 		counter = counter_of_sub_networks.get()
 		counter = counter + 1
 
-		if type_of_connection == '':
-			type_of_connection = 'Cascade'
+		if type_of_interconnection == '':
+			type_of_interconnection = SUB_NETWORK_DEFAULT_CONNECTION
 
-		excel_base_template_network_info_sheet.cell(row=excel_circuit_counter_row, column=cfg.EXCEL_COLUMN_A, value=str(counter))
-		excel_base_template_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_B, value = type_of_connection)
-		excel_base_template_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_C, value = type_of_circuit)
-		excel_base_template_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_D, value = element_a)
-		excel_base_template_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_E, value = element_a_value)
-		excel_base_template_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_F, value = element_b)
-		excel_base_template_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_G, value = element_b_value)
-		excel_base_template_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_H, value = element_c)
-		excel_base_template_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_I, value = element_c_value)
-		excel_base_template_workbook.save(cfg.EXCEL_NETWORK_PARAMETERS_FILE)
+		excel_network_info_sheet.cell(row=excel_circuit_counter_row, column=cfg.EXCEL_COLUMN_A, value=str(counter))
+		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_B, value = type_of_interconnection)
+		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_C, value = type_of_circuit)
+		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_D, value = element_a)
+		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_E, value = element_a_value)
+		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_F, value = element_b)
+		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_G, value = element_b_value)
+		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_H, value = element_c)
+		excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_I, value = element_c_value)
+		excel_network_parameters_workbook.save(cfg.EXCEL_NETWORK_PARAMETERS_FILE)
 
 		excel_circuit_counter_row = excel_circuit_counter_row + 1
 
@@ -124,38 +135,75 @@ def add_sub_network():
 
 
 def calculate_parameters():
-	excel_network_parameters_workbook = load_workbook(filename= cfg.EXCEL_NETWORK_PARAMETERS_FILE)
-	excel_network_info_sheet = excel_network_parameters_workbook[cfg.EXCEL_NETWORK_INFO_SHEET]
-	network_counter = 0
-	networks = []
+	sub_network_id_counter = cfg.EXCEL_INITIAL_ROW_NETWORK_ID
+	sub_networks = []
+	sub_networks_interconnection = []
 
-	while excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW_NETWORK_ID + network_counter, column=cfg.EXCEL_COLUMN_A).value != '':
-		network_id = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW_NETWORK_ID + network_counter, column=cfg.EXCEL_COLUMN_A).value
-		network_counter = network_counter + 1
+	while excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_A).value is not None:
+		# sub_network_id = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_A).value
+		interconnection_type = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_B).value
+		sub_networks_interconnection.append(interconnection_type)
+		circuit_type = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_C).value
+
+		if circuit_type == 'Series impedance':
+			element = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_D).value
+			element_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_E).value
+
+			sub_network = SeriesImpedanceCircuit(type_of_element=element, element_value=convert_string_to_value(element_value))
+			sub_networks.append(sub_network)
+
+		elif circuit_type == 'Shunt impedance':
+			element = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_D).value
+			element_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_E).value
+
+			sub_network = ShuntImpedanceCircuit(type_of_element=element, element_value=convert_string_to_value(element_value))
+			sub_networks.append(sub_network)
+
+		elif circuit_type == 'T':
+			element_a = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_D).value
+			element_a_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_E).value
+			element_b = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_F).value
+			element_b_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_G).value
+			element_c = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_H).value
+			element_c_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_I).value
+
+			sub_network = TCircuit(type_of_element_a=element_a, element_a_value=convert_string_to_value(element_a_value),
+								   type_of_element_b=element_b, element_b_value=convert_string_to_value(element_b_value),
+								   type_of_element_c=element_c, element_c_value=convert_string_to_value(element_c_value))
+			sub_networks.append(sub_network)
+
+		elif circuit_type == 'Pi':
+			element_a = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_D).value
+			element_a_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_E).value
+			element_b = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_F).value
+			element_b_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_G).value
+			element_c = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_H).value
+			element_c_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_I).value
+
+			sub_network = PiCircuit(type_of_element_a=element_a, element_a_value=convert_string_to_value(element_a_value),
+								   type_of_element_b=element_b, element_b_value=convert_string_to_value(element_b_value),
+								   type_of_element_c=element_c, element_c_value=convert_string_to_value(element_c_value))
+			sub_networks.append(sub_network)
+
+		sub_network_id_counter = sub_network_id_counter + 1
 
 
-	start_frequency = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW, column=cfg.EXCEL_COLUMN_B).value
-	value, prefix = start_frequency.split()
-	start_frequency = int(value) * cfg.FREQUENCY_PREFIXES_TO_VALUE[prefix]
+	# start_frequency = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW, column=cfg.EXCEL_COLUMN_B).value
+	# value, prefix = start_frequency.split()
+	# start_frequency = int(value) * cfg.FREQUENCY_PREFIXES_TO_VALUE[prefix]
 
-	end_frequency = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 1, column=cfg.EXCEL_COLUMN_B).value
-	value, prefix = end_frequency.split()
-	end_frequency = int(value) * cfg.FREQUENCY_PREFIXES_TO_VALUE[prefix]
+	# end_frequency = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 1, column=cfg.EXCEL_COLUMN_B).value
+	# value, prefix = end_frequency.split()
+	# end_frequency = int(value) * cfg.FREQUENCY_PREFIXES_TO_VALUE[prefix]
 
-	frequency_points = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 2, column=cfg.EXCEL_COLUMN_B).value
-	frequency_points = frequency_points.split(',')
+	# frequency_points = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 2, column=cfg.EXCEL_COLUMN_B).value
+	# frequency_points = frequency_points.split(',')
 
-	frequency_points = get_total_frequency_points(start_frequency, frequency_points, end_frequency)
-
-	parameters_to_calculate = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 5, column=cfg.EXCEL_COLUMN_B).value
-
-	value = excel_network_info_sheet.cell(row=10, column=cfg.EXCEL_COLUMN_A).value
-
-	# while excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW_NETWORK_ID, column=cfg.EXCEL_COLUMN_A) != None:
+	# frequency_points = get_total_frequency_points(start_frequency, frequency_points, end_frequency)
 	#
-	# for frequency in frequency_points:
-
-
+	# parameters_to_calculate = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 5, column=cfg.EXCEL_COLUMN_B).value
+	#
+	# value = excel_network_info_sheet.cell(row=10, column=cfg.EXCEL_COLUMN_A).value
 
 
 def get_total_frequency_points(start_frequency, frequency_points, end_frequency):
@@ -178,6 +226,26 @@ def get_total_frequency_points(start_frequency, frequency_points, end_frequency)
 	frequency_range.append(end_frequency)
 
 	return frequency_range
+
+
+def convert_string_to_value(string_value):
+	number_string = ''
+	magnitude_prefix_string = ''
+
+	for value in string_value:
+		if value.isdigit():
+			number_string = number_string + value
+		else:
+			magnitude_prefix_string = magnitude_prefix_string + value
+			magnitude_prefix_string = magnitude_prefix_string.split()
+
+			if magnitude_prefix_string[0] == 'k':
+				magnitude_prefix_string[0] = 'K'
+
+	magnitude = cfg.MAGNITUDES_PREFIXES_TO_VALUE[magnitude_prefix_string[0]]
+	element_value = int(number_string) * magnitude
+
+	return element_value
 
 
 mainWindow = tk.Tk()
@@ -296,10 +364,10 @@ total_of_circuits_label.grid(row=row, column=3)
 
 row = row + 1
 
-type_of_connection_label = ttk.Label(mainWindow, text='Type of connection')
-type_of_connection_label.grid(row=row, column=0)
-type_of_connection_combobox = ttk.Combobox(mainWindow, values=cfg.INTERCONNECTION_TYPES, state='disable', textvariable=reset_type_of_connection_combobox)
-type_of_connection_combobox.grid(row=row, column=1)
+type_of_interconnection_label = ttk.Label(mainWindow, text='Type of interconnection')
+type_of_interconnection_label.grid(row=row, column=0)
+type_of_interconnection_combobox = ttk.Combobox(mainWindow, values=cfg.INTERCONNECTION_TYPES, state='disable', textvariable=reset_type_of_connection_combobox)
+type_of_interconnection_combobox.grid(row=row, column=1)
 
 row = row + 1
 
