@@ -5,8 +5,6 @@ from openpyxl import *
 import config_parameters as cfg
 from source.common_two_port_circuits import *
 
-SUB_NETWORK_DEFAULT_CONNECTION = 'Cascade connection'
-
 excel_base_template_workbook = load_workbook(filename=cfg.EXCEL_BASE_TEMPLATE_FILE)
 excel_base_template_workbook.save(cfg.EXCEL_NETWORK_PARAMETERS_FILE)
 excel_base_template_workbook.close()
@@ -31,7 +29,6 @@ def add_frequency_point_to_analyze():
 
         reset_frequency_point_to_analyze_entry.set('')
         reset_frequency_point_to_analyze_combobox.set('')
-
 
 def save_frequency_parameters():
     start_frequency = start_frequency_entry.get()
@@ -60,7 +57,6 @@ def save_frequency_parameters():
         parameters_to_calculate_combobox.config(state='normal')
         save_network_parameters_button.config(state='normal')
 
-
 def save_network_parameters():
     type_of_network = type_of_network_combobox.get()
     parameters_to_calculate = parameters_to_calculate_combobox.get()
@@ -85,7 +81,6 @@ def save_network_parameters():
         element_C_entry.config(state = 'normal')
         add_sub_network_button.config(state ='normal')
 
-
 def add_sub_network():
     type_of_circuit = type_of_circuit_combobox.get()
     type_of_interconnection = type_of_interconnection_combobox.get()
@@ -105,7 +100,7 @@ def add_sub_network():
         counter = counter + 1
 
         if type_of_interconnection == '':
-            type_of_interconnection = SUB_NETWORK_DEFAULT_CONNECTION
+            type_of_interconnection = cfg.SUB_NETWORK_DEFAULT_CONNECTION
 
         excel_network_info_sheet.cell(row=excel_circuit_counter_row, column=cfg.EXCEL_COLUMN_A, value=str(counter))
         excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_B, value = type_of_interconnection)
@@ -133,16 +128,95 @@ def add_sub_network():
         if counter == 1:
             calculate_parameters_button.config(state='normal')
 
-
 def calculate_parameters():
+    _sub_networks = []
+    _sub_networks_interconnection = []
+    excel_abcd_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_ABCD_PARAMETERS_SHEET]
+
+    _parameters_to_calculate = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 5, column=cfg.EXCEL_COLUMN_B).value
+
+    _sub_networks, _sub_networks_interconnection = get_sub_networks_info()
+
+    frequency_range = get_frequency_range()
+
+    row_counter = cfg.EXCEL_INITIAL_ROW
+
+    for frequency in frequency_range:
+        abcd_parameters = get_total_abcd_matrix_parameters(sub_networks=_sub_networks, frequency=frequency)
+
+        excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency
+        excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = abcd_parameters[cfg.PARAMETER_A_INDEX]
+        excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = abcd_parameters[cfg.PARAMETER_B_INDEX]
+        excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = abcd_parameters[cfg.PARAMETER_C_INDEX]
+        excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = abcd_parameters[cfg.PARAMETER_D_INDEX]
+        excel_network_parameters_workbook.save(cfg.EXCEL_NETWORK_PARAMETERS_FILE)
+
+        row_counter = row_counter + 1
+
+def get_total_frequency_points(start_frequency, frequency_points, end_frequency):
+    frequency_points_temp = []
+    frequency_range = []
+
+    for frequency_point in frequency_points:
+        value, prefix = frequency_point.split()
+        frequency_point = int(value) * cfg.FREQUENCY_PREFIXES_TO_VALUE[prefix]
+
+        frequency_points_temp.append(frequency_point)
+
+    frequency_points = frequency_points_temp
+
+    frequency_range.append(start_frequency)
+
+    for frequency in frequency_points:
+        frequency_range.append(frequency)
+
+    frequency_range.append(end_frequency)
+
+    return frequency_range
+
+def convert_string_to_value(string_value):
+    num_str = ''
+    prefix_str = ''
+
+    for character_value in string_value:
+        if character_value.isdigit() or character_value == '.':
+            num_str = num_str + character_value
+        else:
+            prefix_str = prefix_str + character_value
+
+    prefix_str = prefix_str[0]
+
+    prefix_value = cfg.MAGNITUDES_PREFIXES_TO_VALUE[prefix_str]
+    num_value = float(num_str)
+
+    value = num_value * prefix_value
+
+    return value
+
+def join_value_and_prefix(value: str):
+    num_str = ''
+    prefix_str = ''
+
+    for character_value in value:
+        if character_value.isdigit() or character_value == '.':
+            num_str = num_str + character_value
+        else:
+            if character_value != ' ':
+                if character_value == 'f' or character_value == 'h' or character_value == 'k':
+                    character_value = character_value.title()
+
+                prefix_str = prefix_str + character_value
+
+    value = num_str + prefix_str
+
+    return value
+
+def get_sub_networks_info():
     sub_network_id_counter = cfg.EXCEL_INITIAL_ROW_NETWORK_ID
     sub_networks = []
     sub_networks_interconnection = []
-    sub_networks_matrixes = []
-    excel_abcd_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_ABCD_PARAMETERS_SHEET]
 
     while excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_A).value is not None:
-        # sub_network_id = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_A).value
         interconnection_type = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_B).value
         sub_networks_interconnection.append(interconnection_type)
         circuit_type = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_C).value
@@ -189,7 +263,9 @@ def calculate_parameters():
 
         sub_network_id_counter = sub_network_id_counter + 1
 
+    return sub_networks, sub_networks_interconnection
 
+def get_frequency_range():
     start_frequency = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW, column=cfg.EXCEL_COLUMN_B).value
     value, prefix = start_frequency.split()
     start_frequency = int(value) * cfg.FREQUENCY_PREFIXES_TO_VALUE[prefix]
@@ -203,106 +279,64 @@ def calculate_parameters():
     if len(frequency_points_to_be_analyzed) != 0:
         frequency_points_to_be_analyzed = frequency_points_to_be_analyzed.split(',')
 
-    frequency_points_to_be_analyzed = get_total_frequency_points(start_frequency, frequency_points_to_be_analyzed, end_frequency)
+    frequency_range = get_total_frequency_points(start_frequency, frequency_points_to_be_analyzed, end_frequency)
 
-    parameters_to_calculate = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 5, column=cfg.EXCEL_COLUMN_B).value
+    return  frequency_range
 
-    row_counter = cfg.EXCEL_INITIAL_ROW
+def simplify_value_result(value: complex):
+    real_part = value.real
+    imaginary_part = value.imag
+    simplify_result = ''
 
-    for frequency_to_analyzed in frequency_points_to_be_analyzed:
-        for sub_network in sub_networks:
-            sub_networks_matrixes.append(sub_network.get_matrix_abcd(at_frequency=frequency_to_analyzed))
+    if real_part != 0:
+        real_part = str(real_part)
+        simplify_result = simplify_result + real_part
 
-        # Algorithm for multiply all the matrixes
-        total_of_matrixes = len(sub_networks_matrixes)
-        next_matrix_index = 2
-        # global matrix
-        if total_of_matrixes > 1:
-            matrix = sub_networks_matrixes[0] * sub_networks_matrixes[1]
-        else:
-            matrix = sub_networks_matrixes[0]
+    if imaginary_part != 0:
+        imaginary_part = str(imaginary_part)
+        simplify_result = simplify_result + imaginary_part + 'j'
 
-        while next_matrix_index < total_of_matrixes:
-            matrix = matrix * sub_networks_matrixes[next_matrix_index]
+    if real_part == 0 and imaginary_part == 0:
+        simplify_result = '0'
 
-        matrix = matrix.tolist()
-        matrix_row_1 = matrix[0]
-        matrix_row_2 = matrix[1]
-        parameter_a, parameter_b = matrix_row_1
-        parameter_c, parameter_d = matrix_row_2
+    return simplify_result
 
-        excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency_to_analyzed
-        excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(parameter_a)
-        excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = str(parameter_b)
-        excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(parameter_c)
-        excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(parameter_d)
-        excel_network_parameters_workbook.save(cfg.EXCEL_NETWORK_PARAMETERS_FILE)
+def get_total_abcd_matrix_parameters(sub_networks: list, frequency: int):
+    total_of_matrices: int
+    total_abcd_matrix: complex
+    abcd_parameters: list
+    sub_networks_matrices = []
 
-        row_counter = row_counter + 1
+    for sub_network in sub_networks:
+        sub_networks_matrices.append(sub_network.get_matrix_abcd(at_frequency=frequency))
 
-        sub_networks_matrixes.clear()
+    total_of_matrices = len(sub_networks_matrices)
+    next_matrix_index = 2
 
+    if total_of_matrices > 1:
+        total_abcd_matrix = sub_networks_matrices[0] * sub_networks_matrices[1]
+    else:
+        total_abcd_matrix = sub_networks_matrices[0]
 
+    while next_matrix_index < total_of_matrices:
+        total_abcd_matrix = total_abcd_matrix * sub_networks_matrices[next_matrix_index]
 
-def get_total_frequency_points(start_frequency, frequency_points, end_frequency):
-    frequency_points_temp = []
-    frequency_range = []
+    total_abcd_matrix = total_abcd_matrix.tolist()
+    matrix_row_1 = total_abcd_matrix[0]
+    matrix_row_2 = total_abcd_matrix[1]
+    parameter_a, parameter_b = matrix_row_1
+    parameter_c, parameter_d = matrix_row_2
 
-    for frequency_point in frequency_points:
-        value, prefix = frequency_point.split()
-        frequency_point = int(value) * cfg.FREQUENCY_PREFIXES_TO_VALUE[prefix]
+    parameter_a = simplify_value_result(value=parameter_a)
+    parameter_b = simplify_value_result(value=parameter_b)
+    parameter_c = simplify_value_result(value=parameter_c)
+    parameter_d = simplify_value_result(value=parameter_d)
 
-        frequency_points_temp.append(frequency_point)
+    abcd_parameters = [parameter_a, parameter_b, parameter_c, parameter_d]
 
-    frequency_points = frequency_points_temp
+    sub_networks_matrices.clear()
 
-    frequency_range.append(start_frequency)
-
-    for frequency in frequency_points:
-        frequency_range.append(frequency)
-
-    frequency_range.append(end_frequency)
-
-    return frequency_range
-
-
-def convert_string_to_value(string_value):
-    num_str = ''
-    prefix_str = ''
-
-    for character_value in string_value:
-        if character_value.isdigit() or character_value == '.':
-            num_str = num_str + character_value
-        else:
-            prefix_str = prefix_str + character_value
-
-    prefix_str = prefix_str[0]
-
-    prefix_value = cfg.MAGNITUDES_PREFIXES_TO_VALUE[prefix_str]
-    num_value = float(num_str)
-
-    value = num_value * prefix_value
-
-    return value
-
-def join_value_and_prefix(value: str):
-    num_str = ''
-    prefix_str = ''
-
-    for character_value in value:
-        if character_value.isdigit() or character_value == '.':
-            num_str = num_str + character_value
-        else:
-            if character_value != ' ':
-                if character_value == 'f' or character_value == 'h' or character_value == 'k':
-                    character_value = character_value.title()
-
-                prefix_str = prefix_str + character_value
-
-    value = num_str + prefix_str
-
-    return value
-
+    return abcd_parameters
 
 mainWindow = tk.Tk()
 mainWindow.title("Network parameter calculator")
