@@ -18,6 +18,37 @@ excel_network_info_sheet = excel_network_parameters_workbook[cfg.EXCEL_NETWORK_I
 excel_circuit_counter_row = cfg.EXCEL_INITIAL_ROW_NETWORK_ID
 frequency_points_to_analyzed = list()
 
+def add_frequency_point_to_analyze():   ##################################### Hacer las frecuencias de prueba en pasaos
+
+    number_of_frequencies = number_of_frequencies_entry.get()
+
+    if number_of_frequencies != '':
+        number_of_frequencies = int(number_of_frequencies)
+
+        start_frequency = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW, column=cfg.EXCEL_COLUMN_B).value
+        value, prefix = start_frequency.split()
+        start_frequency = int(value) * cfg.FREQUENCY_PREFIXES_TO_VALUE[prefix]
+
+        end_frequency = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 1, column=cfg.EXCEL_COLUMN_B).value
+        value, prefix = end_frequency.split()
+        end_frequency = int(value) * cfg.FREQUENCY_PREFIXES_TO_VALUE[prefix]
+
+        frequency_step = (end_frequency - start_frequency) / number_of_frequencies
+        frequency_point_to_analyzed = start_frequency - frequency_step
+        num_str = ''
+        prefix_str = ''
+
+        for all_frequencies in range(number_of_frequencies):
+            frequency_point_to_analyzed = frequency_point_to_analyzed + frequency_step
+            if frequency_point_to_analyzed % 10e9 == 0
+
+
+            frequency_points_to_analyzed.append(frequency_point_to_analyzed)
+
+    else:
+        pass
+
+'''
 def add_frequency_point_to_analyze():
     frequency_point_to_analyzed = frequency_point_to_analyze_entry.get()
     frequency_point_prefix = frequency_point_to_analyze_combobox.get()
@@ -31,7 +62,7 @@ def add_frequency_point_to_analyze():
 
         reset_frequency_point_to_analyze_entry.set('')
         reset_frequency_point_to_analyze_combobox.set('')
-
+'''
 
 def save_frequency_parameters():
     start_frequency = start_frequency_entry.get()
@@ -347,6 +378,7 @@ end_frequency_combobox.grid(row=row, column=2)
 
 row = row + 1
 
+"""""
 frequency_point_to_analyze_label = ttk.Label(mainWindow, text='Frequency point to analyze')
 frequency_point_to_analyze_label.grid(row=row, column=0)
 frequency_point_to_analyze_entry = ttk.Entry(mainWindow, textvariable=reset_frequency_point_to_analyze_entry)
@@ -355,6 +387,14 @@ frequency_point_to_analyze_combobox = ttk.Combobox(mainWindow, values=cfg.FREQUE
 frequency_point_to_analyze_combobox.grid(row=row, column=2)
 frequency_point_to_analyze_button = ttk.Button(mainWindow, text='Add', command=add_frequency_point_to_analyze)
 frequency_point_to_analyze_button.grid(row=row, column=3)
+
+row = row + 1
+"""
+# *************************************************************************************************************** Insertar numero de freq
+number_of_frequencies_label = ttk.Label(mainWindow, text='Number of frequencies to analyze')
+number_of_frequencies_label.grid(row=row, column=0)
+number_of_frequencies_entry = ttk.Entry(mainWindow, textvariable=reset_frequency_point_to_analyze_entry)
+number_of_frequencies_entry.grid(row=row, column=1)
 
 row = row + 1
 
