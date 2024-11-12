@@ -77,24 +77,26 @@ def save_network_parameters():
         save_network_parameters_button.config(state = 'disable')
         type_of_circuit_combobox.config(state = 'normal')
         type_of_interconnection_combobox.config(state ='normal')
+        characteristic_impedance_entry.config(state = 'normal')
         element_A_combobox.config(state = 'normal')
         element_A_entry.config(state = 'normal')
         element_B_combobox.config(state = 'normal')
         element_B_entry.config(state = 'normal')
         element_C_combobox.config(state = 'normal')
         element_C_entry.config(state = 'normal')
-        add_sub_network_button.config(state ='normal')
-
+        add_sub_network_button.config(state ='normal')  # ************************************************************
 
 def add_sub_network():
     type_of_circuit = type_of_circuit_combobox.get()
     type_of_interconnection = type_of_interconnection_combobox.get()
+    characteristic_impedance = characteristic_impedance_entry.get()  # *************************************************
     element_a = element_A_combobox.get()
     element_a_value = element_A_entry.get()
     element_b = element_B_combobox.get()
     element_b_value = element_B_entry.get()
     element_c = element_C_combobox.get()
     element_c_value = element_C_entry.get()
+
 
     if type_of_circuit == '' and ((element_a == '' and element_a_value == '') and (element_b == '' and element_b_value == '') and (element_c == '' and element_c_value == '')):
         pass
@@ -107,7 +109,7 @@ def add_sub_network():
         if type_of_interconnection == '':
             type_of_interconnection = SUB_NETWORK_DEFAULT_CONNECTION
 
-        excel_network_info_sheet.cell(row=excel_circuit_counter_row, column=cfg.EXCEL_COLUMN_A, value=str(counter))
+        excel_network_info_sheet.cell(row =  excel_circuit_counter_row, column=cfg.EXCEL_COLUMN_A, value=str(counter))
         excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_B, value = type_of_interconnection)
         excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_C, value = type_of_circuit)
         excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_D, value = element_a)
@@ -116,6 +118,8 @@ def add_sub_network():
         excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_G, value = join_value_and_prefix(element_b_value))
         excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_H, value = element_c)
         excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_I, value = join_value_and_prefix(element_c_value))
+        excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_J, value = characteristic_impedance)  #**********
+
         excel_network_parameters_workbook.save(cfg.EXCEL_NETWORK_PARAMETERS_FILE)
 
         excel_circuit_counter_row = excel_circuit_counter_row + 1
@@ -129,6 +133,8 @@ def add_sub_network():
         reset_element_B_entry.set('')
         reset_element_C_combobox.set('')
         reset_element_C_entry.set('')
+        reset_characteristic_impedance_entry.set('')  # ****************************************************************
+
 
         if counter == 1:
             calculate_parameters_button.config(state='normal')
@@ -319,6 +325,7 @@ reset_element_B_combobox = tk.StringVar(mainWindow, '')
 reset_element_B_entry = tk.StringVar(mainWindow, '')
 reset_element_C_combobox = tk.StringVar(mainWindow, '')
 reset_element_C_entry = tk.StringVar(mainWindow, '')
+reset_characteristic_impedance_entry = tk.StringVar(mainWindow, '') # ********************************************
 
 row = 0
 
@@ -374,8 +381,8 @@ type_of_network_combobox.grid(row=row, column=1)
 
 row = row + 1
 
-spacer_3 = ttk.Label(mainWindow)
-spacer_3.grid(row=row, column=0)
+spacer_1 = ttk.Label(mainWindow)
+spacer_1.grid(row=row, column=0)
 
 row = row + 1
 
@@ -426,6 +433,15 @@ type_of_interconnection_combobox = ttk.Combobox(mainWindow, values=cfg.INTERCONN
 type_of_interconnection_combobox.grid(row=row, column=1)
 
 row = row + 1
+
+# *********** AQUI ES DONDE MOVI ***************************************************************************************
+characteristic_impedance_label = ttk.Label(mainWindow, text='Characteristic Impedance')
+characteristic_impedance_label.grid(row=row, column=0)
+characteristic_impedance_entry = ttk.Entry(mainWindow, state='disable', textvariable=reset_characteristic_impedance_entry)
+characteristic_impedance_entry.grid(row=row, column=1)
+
+row = row + 1
+# **********************************************************************************************************************
 
 spacer_5 = ttk.Label(mainWindow)
 spacer_5.grid(row=row, column=0)

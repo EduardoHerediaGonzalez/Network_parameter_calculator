@@ -36,3 +36,22 @@ def convert_abcd_parameters_to_y_parameters(matrix_abcd: matrix, delta: complex)
     y_parameters_matrix = np.matrix[[parameter_y11, parameter_y12], [parameter_y21, parameter_y22]]
 
     return y_parameters_matrix
+
+def convert_abcd_parameters_to_s_parameters(ZO, matrix_abcd: matrix, delta: complex):
+    matrix_abcd = matrix_abcd.tolist()
+    matrix_abcd_row_1 = matrix_abcd[0]
+    matrix_abcd_row_2 = matrix_abcd[1]
+
+    parameter_a = matrix_abcd_row_1[0]
+    parameter_b = matrix_abcd_row_1[1]
+    parameter_c = matrix_abcd_row_2[0]
+    parameter_d = matrix_abcd_row_2[1]
+
+    parameter_s11 = (parameter_a*Z0 + parameter_b - parameter_c*Z0**2 - parameter_d*Z0) / (parameter_a*Z0 + parameter_b + parameter_c*Z0**2 + parameter_d*Z0)
+    parameter_s12 = (2*(delta)*Z0) / (parameter_a*Z0 + parameter_b + parameter_c*Z0**2 + parameter_d*Z0)
+    parameter_s21 = 2*Z0 / (parameter_a*Z0 + parameter_b + parameter_c*Z0**2 + parameter_d*Z0)
+    parameter_s22 = (- parameter_a*Z0 + parameter_b - parameter_c*Z0**2 + parameter_d*Z0) / (parameter_a*Z0 + parameter_b + parameter_c*Z0**2 + parameter_d*Z0)
+
+    s_parameters_matrix = np.matrix[[parameter_s11, parameter_s12], [parameter_s21, parameter_s22]]
+
+    return s_parameters_matrix
