@@ -42,18 +42,17 @@ def add_frequency_point_to_analyze():
 
             frequency_points_to_analyzed.append(formatted_frequency)
             frequency_point_to_analyzed += frequency_step_value
+        print(frequency_points_to_analyzed)
 
     else:
         pass
 
 def step_point_frequency_with_prefix(frequency_hz):
-
     for prefix, factor in sorted(cfg.FREQUENCY_PREFIXES_TO_VALUE.items(), key=lambda x: -x[1]):
-        if frequency_hz % factor == 0:
-            formatted_value = frequency_hz // factor
-            return f"{formatted_value} {prefix}"
-    return f"{frequency_hz} Hz"
-# ******************************************************************************************
+        if frequency_hz >= factor:
+            formatted_value = frequency_hz / factor
+            return f"{formatted_value:.2f} {prefix}"
+    return f"{frequency_hz:.2f} Hz"
 
 def save_frequency_parameters():
     start_frequency = start_frequency_entry.get()
@@ -173,12 +172,18 @@ def calculate_parameters():
     sub_networks_interconnection = []
     sub_networks_matrixes = []
     excel_abcd_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_ABCD_PARAMETERS_SHEET]
+    characteristic_impedance_list = []
 
     while excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_A).value is not None:
         # sub_network_id = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_A).value
         interconnection_type = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_B).value
         sub_networks_interconnection.append(interconnection_type)
+        characteristic_impedance = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_J).value
+        characteristic_impedance = int(characteristic_impedance)
+        characteristic_impedance_list.append(characteristic_impedance)
+
         circuit_type = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_C).value
+        print(characteristic_impedance_list)
 
         if circuit_type == 'Series impedance':
             element = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_D).value
@@ -282,7 +287,7 @@ def get_total_frequency_points(start_frequency, frequency_points, end_frequency)
 
     for frequency_point in frequency_points:
         value, prefix = frequency_point.split()
-        frequency_point = int(value) * cfg.FREQUENCY_PREFIXES_TO_VALUE[prefix]
+        frequency_point = float(value) * cfg.FREQUENCY_PREFIXES_TO_VALUE[prefix]
 
         frequency_points_temp.append(frequency_point)
 
