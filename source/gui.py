@@ -30,9 +30,6 @@ def add_frequency_point_to_analyze():
     end_frequency_value = int(end_frequency) * cfg.FREQUENCY_PREFIXES_TO_VALUE[end_frequency_prefix]
 
     frequency_step = frequency_step_entry.get()
-    frequency_step_prefix = frequency_step_combobox.get()
-
-    frequency_step_value = int(frequency_step) * cfg.FREQUENCY_PREFIXES_TO_VALUE[frequency_step_prefix]
 
     if frequency_step != '':
         frequency_point_to_analyzed = start_frequency_value
@@ -40,7 +37,7 @@ def add_frequency_point_to_analyze():
             formatted_frequency = step_point_frequency_with_prefix(frequency_point_to_analyzed)
 
             frequency_points_to_analyzed.append(formatted_frequency)
-            frequency_point_to_analyzed += frequency_step_value
+            frequency_point_to_analyzed = frequency_point_to_analyzed + int(frequency_step)
         print(frequency_points_to_analyzed)
 
     else:
@@ -56,35 +53,42 @@ def step_point_frequency_with_prefix(frequency_hz):
 def save_frequency_parameters():
     start_frequency = start_frequency_entry.get()
     start_frequency_prefix = start_frequency_combobox.get()
+    start_frequency_value = int(start_frequency) * cfg.FREQUENCY_PREFIXES_TO_VALUE[start_frequency_prefix]
+
     end_frequency = end_frequency_entry.get()
     end_frequency_prefix = end_frequency_combobox.get()
+    end_frequency_value = int(end_frequency) * cfg.FREQUENCY_PREFIXES_TO_VALUE[end_frequency_prefix]
 
     if start_frequency == '' or start_frequency_prefix == '' or end_frequency == '' or end_frequency_prefix == '':
         pass
     else:
+         frequency_step = frequency_step_entry.get()
 
-         # ********************************************************************************************************
-        add_frequency_point_to_analyze()
+         if frequency_step != '':
+             frequency_point_to_analyzed = start_frequency_value
+             while frequency_point_to_analyzed <= end_frequency_value:
+                 formatted_frequency = step_point_frequency_with_prefix(frequency_point_to_analyzed)
 
-        frequency_points = ','.join(frequency_points_to_analyzed)
-        excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW, column=cfg.EXCEL_COLUMN_B).value = start_frequency + ' ' + start_frequency_prefix
-        excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 1, column=cfg.EXCEL_COLUMN_B).value = end_frequency + ' ' + end_frequency_prefix
-        excel_network_info_sheet.cell(row =cfg.EXCEL_INITIAL_ROW + 2, column = cfg.EXCEL_COLUMN_B).value = frequency_points
-        excel_network_parameters_workbook.save(cfg.EXCEL_NETWORK_PARAMETERS_FILE)
+                 frequency_points_to_analyzed.append(formatted_frequency)
+                 frequency_point_to_analyzed = frequency_point_to_analyzed + int(frequency_step)
+         else:
+             pass
 
+    frequency_points = ','.join(frequency_points_to_analyzed)
+    excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW, column=cfg.EXCEL_COLUMN_B).value = start_frequency + ' ' + start_frequency_prefix
+    excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 1, column=cfg.EXCEL_COLUMN_B).value = end_frequency + ' ' + end_frequency_prefix
+    excel_network_info_sheet.cell(row =cfg.EXCEL_INITIAL_ROW + 2, column = cfg.EXCEL_COLUMN_B).value = frequency_points
+    excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
 
-
-        start_frequency_entry.config(state='disable')
-        start_frequency_combobox.config(state='disable')
-        end_frequency_entry.config(state='disable')
-        end_frequency_combobox.config(state='disable')
-        frequency_step_entry.config(state='disable')
-        frequency_step_combobox.config(state='disable')  # ************************************************************************
-        #frequency_point_to_analyze_button.config(state='disable')  # */**********************************************************************
-        save_frequency_parameters_button.config(state='disable')
-        type_of_network_combobox.config(state='normal')
-        parameters_to_calculate_combobox.config(state='normal')
-        save_network_parameters_button.config(state='normal')
+    start_frequency_entry.config(state='disable')
+    start_frequency_combobox.config(state='disable')
+    end_frequency_entry.config(state='disable')
+    end_frequency_combobox.config(state='disable')
+    frequency_step_entry.config(state='disable')
+    save_frequency_parameters_button.config(state='disable')
+    type_of_network_combobox.config(state='normal')
+    parameters_to_calculate_combobox.config(state='normal')
+    save_network_parameters_button.config(state='normal')
 
 def save_network_parameters():
     type_of_network = type_of_network_combobox.get()
@@ -161,7 +165,6 @@ def add_sub_network():
 
         if counter == 1:
             calculate_parameters_button.config(state='normal')
-
 
 def calculate_parameters():
     _sub_networks = []
@@ -416,19 +419,13 @@ end_frequency_entry = ttk.Entry(mainWindow)
 end_frequency_entry.grid(row=row, column=1)
 end_frequency_combobox = ttk.Combobox(mainWindow, values=cfg.FREQUENCY_PREFIXES)
 end_frequency_combobox.grid(row=row, column=2)
-#frequency_point_to_analyze_button = ttk.Button(mainWindow, text='Add', command=add_frequency_point_to_analyze)
-#frequency_point_to_analyze_button.grid(row=row+1, column=2)
-
 
 row = row + 1
 
-# *************************************************************************************************************** Insertar numero de freq
-frequency_step_label = ttk.Label(mainWindow, text='Frequency step')
+frequency_step_label = ttk.Label(mainWindow, text='Analysis frequency step')
 frequency_step_label.grid(row=row, column=0)
 frequency_step_entry = ttk.Entry(mainWindow, textvariable=reset_frequency_point_to_analyze_entry)
 frequency_step_entry.grid(row=row, column=1)
-frequency_step_combobox = ttk.Combobox(mainWindow, values=cfg.FREQUENCY_PREFIXES, textvariable=reset_frequency_point_to_analyze_combobox)
-frequency_step_combobox.grid(row=row, column=2)
 
 row = row + 1
 
@@ -437,8 +434,7 @@ spacer_1.grid(row=row, column=0)
 
 row = row + 1
 
-save_frequency_parameters_button = ttk.Button(mainWindow, text='Save frequency parameters',
-                                              command=save_frequency_parameters)
+save_frequency_parameters_button = ttk.Button(mainWindow, text='Save frequency parameters', command=save_frequency_parameters)
 save_frequency_parameters_button.grid(row=row, column=2)
 
 row = row + 1
@@ -508,14 +504,12 @@ type_of_interconnection_combobox.grid(row=row, column=1)
 
 row = row + 1
 
-# *********** AQUI ES DONDE MOVI ***************************************************************************************
 characteristic_impedance_label = ttk.Label(mainWindow, text='Characteristic Impedance')
 characteristic_impedance_label.grid(row=row, column=0)
 characteristic_impedance_entry = ttk.Entry(mainWindow, state='disable', textvariable=reset_characteristic_impedance_entry)
 characteristic_impedance_entry.grid(row=row, column=1)
 
 row = row + 1
-# **********************************************************************************************************************
 
 spacer_5 = ttk.Label(mainWindow)
 spacer_5.grid(row=row, column=0)
