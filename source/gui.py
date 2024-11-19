@@ -1,3 +1,4 @@
+import os
 import tkinter as tk
 from tkinter import ttk
 
@@ -5,12 +6,12 @@ from openpyxl import *
 import config_parameters as cfg
 from source.common_two_port_circuits import *
 
-excel_base_template_workbook = load_workbook(filename=cfg.EXCEL_BASE_TEMPLATE_FILE)
-excel_base_template_workbook.save(cfg.EXCEL_NETWORK_PARAMETERS_FILE)
+excel_base_template_workbook = load_workbook(filename=os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_BASE_TEMPLATE_FILE))
+excel_base_template_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
 excel_base_template_workbook.close()
 del excel_base_template_workbook
 
-excel_network_parameters_workbook = load_workbook(filename= cfg.EXCEL_NETWORK_PARAMETERS_FILE)
+excel_network_parameters_workbook = load_workbook(filename=os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
 excel_network_info_sheet = excel_network_parameters_workbook[cfg.EXCEL_NETWORK_INFO_SHEET]
 
 excel_circuit_counter_row = cfg.EXCEL_INITIAL_ROW_NETWORK_ID
@@ -43,7 +44,7 @@ def save_frequency_parameters():
         excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW, column=cfg.EXCEL_COLUMN_B).value = start_frequency + ' ' + start_frequency_prefix
         excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 1, column=cfg.EXCEL_COLUMN_B).value = end_frequency + ' ' + end_frequency_prefix
         excel_network_info_sheet.cell(row =cfg.EXCEL_INITIAL_ROW + 2, column = cfg.EXCEL_COLUMN_B).value = frequency_points
-        excel_network_parameters_workbook.save(cfg.EXCEL_NETWORK_PARAMETERS_FILE)
+        excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
 
         start_frequency_entry.config(state='disable')
         start_frequency_combobox.config(state = 'disable')
@@ -66,7 +67,7 @@ def save_network_parameters():
     else:
         excel_network_info_sheet.cell(row =cfg.EXCEL_INITIAL_ROW + 4, column = cfg.EXCEL_COLUMN_B).value = type_of_network
         excel_network_info_sheet.cell(row =cfg.EXCEL_INITIAL_ROW + 5, column = cfg.EXCEL_COLUMN_B).value = parameters_to_calculate
-        excel_network_parameters_workbook.save(cfg.EXCEL_NETWORK_PARAMETERS_FILE)
+        excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
 
         type_of_network_combobox.config(state = 'disable')
         parameters_to_calculate_combobox.config(state = 'disable')
@@ -111,7 +112,7 @@ def add_sub_network():
         excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_G, value = join_value_and_prefix(element_b_value))
         excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_H, value = element_c)
         excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_I, value = join_value_and_prefix(element_c_value))
-        excel_network_parameters_workbook.save(cfg.EXCEL_NETWORK_PARAMETERS_FILE)
+        excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
 
         excel_circuit_counter_row = excel_circuit_counter_row + 1
 
@@ -149,7 +150,7 @@ def calculate_parameters():
         excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = abcd_parameters[cfg.PARAMETER_B_INDEX]
         excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = abcd_parameters[cfg.PARAMETER_C_INDEX]
         excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = abcd_parameters[cfg.PARAMETER_D_INDEX]
-        excel_network_parameters_workbook.save(cfg.EXCEL_NETWORK_PARAMETERS_FILE)
+        excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
 
         row_counter = row_counter + 1
 
