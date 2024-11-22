@@ -1,6 +1,9 @@
 import os
 import tkinter as tk
+import pandas as pd
+import shutil
 from tkinter import ttk
+from tkinter import messagebox
 
 from openpyxl import *
 import config_parameters as cfg
@@ -16,6 +19,7 @@ excel_network_info_sheet = excel_network_parameters_workbook[cfg.EXCEL_NETWORK_I
 
 excel_circuit_counter_row = cfg.EXCEL_INITIAL_ROW_NETWORK_ID
 frequency_points_to_analyzed = list()
+touchstone_file_counter = 1
 
 def add_frequency_point_to_analyze():
     start_frequency = start_frequency_entry.get()
@@ -256,7 +260,6 @@ def get_sub_networks_info():
     characteristic_impedance_list = []
 
     while excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_A).value is not None:
-        # sub_network_id = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_A).value
         interconnection_type = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_B).value
         sub_networks_interconnection.append(interconnection_type)
         characteristic_impedance = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_J).value
@@ -383,6 +386,30 @@ def get_total_abcd_matrix_parameters(sub_networks: list, frequency: int):
 
     return abcd_parameters
 
+def add_touchstone_file():
+    touchstone_file_path = touchstone_file_entry.get()
+    global touchstone_file_counter
+    global counter_of_sub_networks
+
+    if os.path.exists(touchstone_file_path):
+        touchstone_txt_file_name = cfg.TOUCHSTONE_FILE_NAME + str(touchstone_file_counter) + cfg.TXT_EXTENSION
+        shutil.copy2(touchstone_file_path, os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, touchstone_txt_file_name))
+
+        touchstone_excel_file_name = cfg.TOUCHSTONE_FILE_NAME + str(touchstone_file_counter) + cfg.EXCEL_EXTENSION
+        data_frame = pd.read_csv(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, touchstone_txt_file_name), sep=',')
+        data_frame.to_excel(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, touchstone_excel_file_name), index=False)
+        os.remove(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, touchstone_txt_file_name))
+
+        reset_touchstone_file_entry.set('')
+        counter = counter_of_sub_networks.get()
+        counter = counter + 1
+        counter_of_sub_networks.set(counter)
+        touchstone_file_counter = touchstone_file_counter + 1
+
+    else:
+        messagebox.showerror(title='Error', message='Touchstone file not found. Check that the path or filename is correct.')
+
+
 mainWindow = tk.Tk()
 mainWindow.title("Network parameter calculator")
 mainWindow.geometry('800x600')
@@ -399,7 +426,7 @@ reset_element_B_entry = tk.StringVar(mainWindow, '')
 reset_element_C_combobox = tk.StringVar(mainWindow, '')
 reset_element_C_entry = tk.StringVar(mainWindow, '')
 reset_characteristic_impedance_entry = tk.StringVar(mainWindow, '')
-
+reset_touchstone_file_entry = tk.StringVar(mainWindow, '')
 
 # Start of frame 1 #
 row = 0
@@ -413,7 +440,7 @@ spacer_3 = ttk.Label(frame_1)
 
 type_of_circuit_label = ttk.Label(frame_1, text='Type of circuit')
 type_of_circuit_label.grid(row=row, column=0)
-type_of_circuit_combobox = ttk.Combobox(frame_1, values=cfg.CIRCUIT_TYPES, state='disable', textvariable=reset_type_of_circuit_combobox)
+type_of_circuit_combobox = ttk.Combobox(frame_1, values=cfg.CIRCUIT_TYPES, state='normal', textvariable=reset_type_of_circuit_combobox)
 type_of_circuit_combobox.grid(row=row, column=1)
 
 total_of_circuits_label = ttk.Label(frame_1, text='Total of sub-networks:')
@@ -425,15 +452,22 @@ row = row + 1
 
 type_of_interconnection_label = ttk.Label(frame_1, text='Type of interconnection')
 type_of_interconnection_label.grid(row=row, column=0)
-type_of_interconnection_combobox = ttk.Combobox(frame_1, values=cfg.INTERCONNECTION_TYPES, state='disable', textvariable=reset_type_of_connection_combobox)
+type_of_interconnection_combobox = ttk.Combobox(frame_1, values=cfg.INTERCONNECTION_TYPES, state='normal', textvariable=reset_type_of_connection_combobox)
 type_of_interconnection_combobox.grid(row=row, column=1)
 
 row = row + 1
 
 characteristic_impedance_label = ttk.Label(frame_1, text='Characteristic Impedance')
 characteristic_impedance_label.grid(row=row, column=0)
-characteristic_impedance_entry = ttk.Entry(frame_1, state='disable', textvariable=reset_characteristic_impedance_entry)
+characteristic_impedance_entry = ttk.Entry(frame_1, state='normal', textvariable=reset_characteristic_impedance_entry)
 characteristic_impedance_entry.grid(row=row, column=1)
+
+# row = row + 1
+#
+# touchstone_file_button = ttk.Button(frame_1, text='Add touchstone file', command=add_touchstone_file)
+# touchstone_file_button.grid(row=row, column=0)
+# touchstone_file_entry = ttk.Entry(frame_1, textvariable=reset_touchstone_file_entry)
+# touchstone_file_entry.grid(row=row, column=1)
 
 row = row + 1
 
@@ -471,6 +505,13 @@ element_C_value_label = ttk.Label(frame_1, text='Value')
 element_C_value_label.grid(row=row, column=2)
 element_C_entry = ttk.Entry(frame_1, state='disable', textvariable=reset_element_C_entry)
 element_C_entry.grid(row=row, column=3)
+
+row = row + 1
+
+touchstone_file_button = ttk.Button(frame_1, text='Add touchstone file', command=add_touchstone_file)
+touchstone_file_button.grid(row=row, column=0)
+touchstone_file_entry = ttk.Entry(frame_1, textvariable=reset_touchstone_file_entry)
+touchstone_file_entry.grid(row=row, column=1)
 
 row = row + 1
 
