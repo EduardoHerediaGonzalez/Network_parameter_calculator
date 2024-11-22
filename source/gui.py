@@ -17,7 +17,6 @@ excel_network_info_sheet = excel_network_parameters_workbook[cfg.EXCEL_NETWORK_I
 excel_circuit_counter_row = cfg.EXCEL_INITIAL_ROW_NETWORK_ID
 frequency_points_to_analyzed = list()
 
-# *****************************Nuevo********************************************************
 def add_frequency_point_to_analyze():
     start_frequency = start_frequency_entry.get()
     start_frequency_prefix = start_frequency_combobox.get()
@@ -29,7 +28,7 @@ def add_frequency_point_to_analyze():
 
     end_frequency_value = int(end_frequency) * cfg.FREQUENCY_PREFIXES_TO_VALUE[end_frequency_prefix]
 
-    frequency_step = frequency_step_entry.get()
+    frequency_step = analysis_frequency_step_entry.get()
 
     if frequency_step != '':
         frequency_point_to_analyzed = start_frequency_value
@@ -62,7 +61,7 @@ def save_frequency_parameters():
     if start_frequency == '' or start_frequency_prefix == '' or end_frequency == '' or end_frequency_prefix == '':
         pass
     else:
-         frequency_step = frequency_step_entry.get()
+         frequency_step = analysis_frequency_step_entry.get()
 
          if frequency_step != '':
              frequency_point_to_analyzed = start_frequency_value
@@ -84,7 +83,7 @@ def save_frequency_parameters():
     start_frequency_combobox.config(state='disable')
     end_frequency_entry.config(state='disable')
     end_frequency_combobox.config(state='disable')
-    frequency_step_entry.config(state='disable')
+    analysis_frequency_step_entry.config(state='disable')
     save_frequency_parameters_button.config(state='disable')
     type_of_network_combobox.config(state='normal')
     parameters_to_calculate_combobox.config(state='normal')
@@ -113,12 +112,12 @@ def save_network_parameters():
         element_B_entry.config(state = 'normal')
         element_C_combobox.config(state = 'normal')
         element_C_entry.config(state = 'normal')
-        add_sub_network_button.config(state ='normal')  # ************************************************************
+        add_sub_network_button.config(state ='normal')
 
 def add_sub_network():
     type_of_circuit = type_of_circuit_combobox.get()
     type_of_interconnection = type_of_interconnection_combobox.get()
-    characteristic_impedance = characteristic_impedance_entry.get()  # *************************************************
+    characteristic_impedance = characteristic_impedance_entry.get()
     element_a = element_A_combobox.get()
     element_a_value = element_A_entry.get()
     element_b = element_B_combobox.get()
@@ -160,8 +159,7 @@ def add_sub_network():
         reset_element_B_entry.set('')
         reset_element_C_combobox.set('')
         reset_element_C_entry.set('')
-        reset_characteristic_impedance_entry.set('')  # ****************************************************************
-
+        reset_characteristic_impedance_entry.set('')
 
         if counter == 1:
             calculate_parameters_button.config(state='normal')
@@ -390,7 +388,7 @@ mainWindow.title("Network parameter calculator")
 mainWindow.geometry('800x600')
 
 counter_of_sub_networks = tk.IntVar(mainWindow, 0)
-reset_frequency_point_to_analyze_entry = tk.StringVar(mainWindow, '')
+reset_analysis_frequency_step_entry = tk.StringVar(mainWindow, '')
 reset_frequency_point_to_analyze_combobox = tk.StringVar(mainWindow, '')
 reset_type_of_circuit_combobox = tk.StringVar(mainWindow, '')
 reset_type_of_connection_combobox = tk.StringVar(mainWindow, '')
@@ -400,161 +398,178 @@ reset_element_B_combobox = tk.StringVar(mainWindow, '')
 reset_element_B_entry = tk.StringVar(mainWindow, '')
 reset_element_C_combobox = tk.StringVar(mainWindow, '')
 reset_element_C_entry = tk.StringVar(mainWindow, '')
-reset_characteristic_impedance_entry = tk.StringVar(mainWindow, '') # ********************************************
+reset_characteristic_impedance_entry = tk.StringVar(mainWindow, '')
 
+
+# Start of frame 1 #
 row = 0
 
-start_frequency_label = ttk.Label(mainWindow, text = 'Start frequency')
-start_frequency_label.grid(row=row, column=0)
-start_frequency_entry = ttk.Entry(mainWindow)
-start_frequency_entry.grid(row=row, column=1)
-start_frequency_combobox = ttk.Combobox(mainWindow, values = cfg.FREQUENCY_PREFIXES)
-start_frequency_combobox.grid(row=row, column=2)
+frame_1 = ttk.Frame(mainWindow)
+frame_1.grid(row=row, column=0)
 
-row = row + 1
+spacer_1 = ttk.Label(frame_1)
+spacer_2 = ttk.Label(frame_1)
+spacer_3 = ttk.Label(frame_1)
 
-end_frequency_label = ttk.Label(mainWindow, text='End frequency')
-end_frequency_label.grid(row=row, column=0)
-end_frequency_entry = ttk.Entry(mainWindow)
-end_frequency_entry.grid(row=row, column=1)
-end_frequency_combobox = ttk.Combobox(mainWindow, values=cfg.FREQUENCY_PREFIXES)
-end_frequency_combobox.grid(row=row, column=2)
-
-row = row + 1
-
-frequency_step_label = ttk.Label(mainWindow, text='Analysis frequency step')
-frequency_step_label.grid(row=row, column=0)
-frequency_step_entry = ttk.Entry(mainWindow, textvariable=reset_frequency_point_to_analyze_entry)
-frequency_step_entry.grid(row=row, column=1)
-
-row = row + 1
-
-spacer_1 = ttk.Label(mainWindow)
-spacer_1.grid(row=row, column=0)
-
-row = row + 1
-
-save_frequency_parameters_button = ttk.Button(mainWindow, text='Save frequency parameters', command=save_frequency_parameters)
-save_frequency_parameters_button.grid(row=row, column=2)
-
-row = row + 1
-
-spacer_1 = ttk.Label(mainWindow)
-spacer_1.grid(row=row, column=0)
-
-row = row + 1
-
-type_of_network_label = ttk.Label(mainWindow, text='Type of network')
-type_of_network_label.grid(row=row, column=0)
-type_of_network_combobox = ttk.Combobox(mainWindow, values=cfg.NETWORK_TYPES, state='disable')
-type_of_network_combobox.grid(row=row, column=1)
-
-row = row + 1
-
-spacer_1 = ttk.Label(mainWindow)
-spacer_1.grid(row=row, column=0)
-
-row = row + 1
-
-parameters_to_calculate_label = ttk.Label(mainWindow, text='Parameters to calculate')
-parameters_to_calculate_label.grid(row=row, column=0)
-parameters_to_calculate_combobox = ttk.Combobox(mainWindow, values=cfg.NETWORK_PARAMETERS, state='disable')
-parameters_to_calculate_combobox.grid(row=row, column=1)
-
-#In case of N-port uncomment the next lines
-#total_of_ports_label = ttk.Label(mainWindow, text='Total of ports')
-#total_of_ports_label.grid(row=row, column=2)
-#total_of_ports_entry = ttk.Entry(mainWindow)
-#total_of_ports_entry.grid(row=row, column=3)
-#total_of_ports_entry.config(state='normal')
-
-row = row + 1
-
-spacer_1 = ttk.Label(mainWindow)
-spacer_1.grid(row=row, column=0)
-
-row = row + 1
-
-save_network_parameters_button = ttk.Button(mainWindow, text='Save network parameters', state='disable', command=save_network_parameters)
-save_network_parameters_button.grid(row=row, column=2)
-
-row = row + 1
-
-spacer_4 = ttk.Label(mainWindow)
-spacer_4.grid(row=row, column=0)
-
-row = row + 1
-
-type_of_circuit_label = ttk.Label(mainWindow, text='Type of circuit')
+type_of_circuit_label = ttk.Label(frame_1, text='Type of circuit')
 type_of_circuit_label.grid(row=row, column=0)
-type_of_circuit_combobox = ttk.Combobox(mainWindow, values=cfg.CIRCUIT_TYPES, state='disable', textvariable=reset_type_of_circuit_combobox)
+type_of_circuit_combobox = ttk.Combobox(frame_1, values=cfg.CIRCUIT_TYPES, state='disable', textvariable=reset_type_of_circuit_combobox)
 type_of_circuit_combobox.grid(row=row, column=1)
 
-total_of_circuits_label = ttk.Label(mainWindow, text='Total of sub-networks:')
+total_of_circuits_label = ttk.Label(frame_1, text='Total of sub-networks:')
 total_of_circuits_label.grid(row=row, column=2)
-total_of_circuits_label = ttk.Label(mainWindow, textvariable=counter_of_sub_networks)
+total_of_circuits_label = ttk.Label(frame_1, textvariable=counter_of_sub_networks)
 total_of_circuits_label.grid(row=row, column=3)
 
 row = row + 1
 
-type_of_interconnection_label = ttk.Label(mainWindow, text='Type of interconnection')
+type_of_interconnection_label = ttk.Label(frame_1, text='Type of interconnection')
 type_of_interconnection_label.grid(row=row, column=0)
-type_of_interconnection_combobox = ttk.Combobox(mainWindow, values=cfg.INTERCONNECTION_TYPES, state='disable', textvariable=reset_type_of_connection_combobox)
+type_of_interconnection_combobox = ttk.Combobox(frame_1, values=cfg.INTERCONNECTION_TYPES, state='disable', textvariable=reset_type_of_connection_combobox)
 type_of_interconnection_combobox.grid(row=row, column=1)
 
 row = row + 1
 
-characteristic_impedance_label = ttk.Label(mainWindow, text='Characteristic Impedance')
+characteristic_impedance_label = ttk.Label(frame_1, text='Characteristic Impedance')
 characteristic_impedance_label.grid(row=row, column=0)
-characteristic_impedance_entry = ttk.Entry(mainWindow, state='disable', textvariable=reset_characteristic_impedance_entry)
+characteristic_impedance_entry = ttk.Entry(frame_1, state='disable', textvariable=reset_characteristic_impedance_entry)
 characteristic_impedance_entry.grid(row=row, column=1)
 
 row = row + 1
 
-spacer_5 = ttk.Label(mainWindow)
-spacer_5.grid(row=row, column=0)
+spacer_1.grid(row=row, column=0)
 
 row = row + 1
 
-element_A_label = ttk.Label(mainWindow, text='Element A')
+element_A_label = ttk.Label(frame_1, text='Element A')
 element_A_label.grid(row=row, column=0)
-element_A_combobox = ttk.Combobox(mainWindow, values=cfg.ELEMENT_TYPES, state='disable', textvariable=reset_element_A_combobox)
+element_A_combobox = ttk.Combobox(frame_1, values=cfg.ELEMENT_TYPES, state='disable', textvariable=reset_element_A_combobox)
 element_A_combobox.grid(row=row, column=1)
-element_A_value_label = ttk.Label(mainWindow, text='Value')
+element_A_value_label = ttk.Label(frame_1, text='Value')
 element_A_value_label.grid(row=row, column=2)
-element_A_entry = ttk.Entry(mainWindow, state='disable', textvariable=reset_element_A_entry)
+element_A_entry = ttk.Entry(frame_1, state='disable', textvariable=reset_element_A_entry)
 element_A_entry.grid(row=row, column=3)
 
 row = row + 1
 
-element_B_label = ttk.Label(mainWindow, text='Element B')
+element_B_label = ttk.Label(frame_1, text='Element B')
 element_B_label.grid(row=row, column=0)
-element_B_combobox = ttk.Combobox(mainWindow, values=cfg.ELEMENT_TYPES, state='disable', textvariable=reset_element_B_combobox)
+element_B_combobox = ttk.Combobox(frame_1, values=cfg.ELEMENT_TYPES, state='disable', textvariable=reset_element_B_combobox)
 element_B_combobox.grid(row=row, column=1)
-element_B_value_label = ttk.Label(mainWindow, text='Value')
+element_B_value_label = ttk.Label(frame_1, text='Value')
 element_B_value_label.grid(row=row, column=2)
-element_B_entry = ttk.Entry(mainWindow, state='disable', textvariable=reset_element_B_entry)
+element_B_entry = ttk.Entry(frame_1, state='disable', textvariable=reset_element_B_entry)
 element_B_entry.grid(row=row, column=3)
 
 row = row + 1
 
-element_C_label = ttk.Label(mainWindow, text='Element C')
+element_C_label = ttk.Label(frame_1, text='Element C')
 element_C_label.grid(row=row, column=0)
-element_C_combobox = ttk.Combobox(mainWindow, values=cfg.ELEMENT_TYPES, state='disable', textvariable=reset_element_C_combobox)
+element_C_combobox = ttk.Combobox(frame_1, values=cfg.ELEMENT_TYPES, state='disable', textvariable=reset_element_C_combobox)
 element_C_combobox.grid(row=row, column=1)
-element_C_value_label = ttk.Label(mainWindow, text='Value')
+element_C_value_label = ttk.Label(frame_1, text='Value')
 element_C_value_label.grid(row=row, column=2)
-element_C_entry = ttk.Entry(mainWindow, state='disable', textvariable=reset_element_C_entry)
+element_C_entry = ttk.Entry(frame_1, state='disable', textvariable=reset_element_C_entry)
 element_C_entry.grid(row=row, column=3)
 
 row = row + 1
 
-add_sub_network_button = ttk.Button(mainWindow, text='Add sub-network', state='disable', command=add_sub_network)
+spacer_2.grid(row=row, column=0)
+
+row = row + 1
+
+add_sub_network_button = ttk.Button(frame_1, text='Add sub-network', state='disable', command=add_sub_network)
 add_sub_network_button.grid(row=row, column=2)
 
 row = row + 1
 
-calculate_parameters_button = ttk.Button(mainWindow, text='Calculate parameters', state='normal', command=calculate_parameters)
-calculate_parameters_button.grid(row=row, column=2)
+spacer_3.grid(row=row, column=0)
+
+# Start of frame 2 #
+row = row + 1
+
+frame_2 = ttk.Frame(mainWindow)
+frame_2.grid(row=row, column=0)
+
+spacer_4 = ttk.Label(frame_2)
+
+start_frequency_label = ttk.Label(frame_2, text = 'Start frequency')
+start_frequency_label.grid(row=row, column=0)
+start_frequency_entry = ttk.Entry(frame_2)
+start_frequency_entry.grid(row=row, column=1)
+start_frequency_combobox = ttk.Combobox(frame_2, values = cfg.FREQUENCY_PREFIXES)
+start_frequency_combobox.grid(row=row, column=2)
+
+row = row + 1
+
+end_frequency_label = ttk.Label(frame_2, text='End frequency')
+end_frequency_label.grid(row=row, column=0)
+end_frequency_entry = ttk.Entry(frame_2)
+end_frequency_entry.grid(row=row, column=1)
+end_frequency_combobox = ttk.Combobox(frame_2, values=cfg.FREQUENCY_PREFIXES)
+end_frequency_combobox.grid(row=row, column=2)
+
+row = row + 1
+
+analysis_frequency_step_label = ttk.Label(frame_2, text='Analysis frequency step')
+analysis_frequency_step_label.grid(row=row, column=0)
+analysis_frequency_step_entry = ttk.Entry(frame_2, textvariable=reset_analysis_frequency_step_entry)
+analysis_frequency_step_entry.grid(row=row, column=1)
+
+row = row + 1
+
+spacer_4.grid(row=row, column=0)
+
+row = row + 1
+
+save_frequency_parameters_button = ttk.Button(frame_2, text='Save frequency parameters', command=save_frequency_parameters)
+save_frequency_parameters_button.grid(row=row, column=0)
+
+# Start of frame 3 #
+row = row + 1
+
+frame_3 = ttk.Frame(mainWindow)
+frame_3.grid(row=row, column=0)
+
+spacer_5 = ttk.Label(frame_3)
+spacer_6 = ttk.Label(frame_3)
+
+row = row + 1
+
+spacer_5.grid(row=row, column=0)
+
+row = row + 1
+
+type_of_network_label = ttk.Label(frame_3, text='Type of network')
+type_of_network_label.grid(row=row, column=0)
+type_of_network_combobox = ttk.Combobox(frame_3, values=cfg.NETWORK_TYPES, state='disable')
+type_of_network_combobox.grid(row=row, column=1)
+
+row = row + 1
+
+parameters_to_calculate_label = ttk.Label(frame_3, text='Parameters to calculate')
+parameters_to_calculate_label.grid(row=row, column=0)
+parameters_to_calculate_combobox = ttk.Combobox(frame_3, values=cfg.NETWORK_PARAMETERS, state='disable')
+parameters_to_calculate_combobox.grid(row=row, column=1)
+
+row = row + 1
+
+spacer_6.grid(row=row, column=0)
+
+row = row + 1
+
+save_network_parameters_button = ttk.Button(frame_3, text='Save network parameters', state='disable', command=save_network_parameters)
+save_network_parameters_button.grid(row=row, column=1)
+
+# Start of frame 4 #
+row = row + 1
+
+frame_4 = ttk.Frame(mainWindow)
+frame_4.grid(row=row, column=0)
+
+row = row + 1
+
+calculate_parameters_button = ttk.Button(frame_4, text='Calculate parameters', state='normal', command=calculate_parameters)
+calculate_parameters_button.grid(row=row, column=0)
 
 mainWindow.mainloop()
