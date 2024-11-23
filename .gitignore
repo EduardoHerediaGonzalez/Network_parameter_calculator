@@ -7,4 +7,5 @@ source/__pycache__/passive_components.cpython-313.pyc
 source/__pycache__/test.cpython-313.pyc
 source/test.py
 source/Network parameters.xlsx
-source/excel_files/Network parameters.xlsx
+source/excel_files/*
+source/touchstone_files/*

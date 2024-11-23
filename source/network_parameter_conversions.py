@@ -27,7 +27,7 @@ def convert_abcd_parameters_to_z_parameters(matrix_abcd: matrix):
 
     return z_parameters_matrix
 
-def convert_abcd_parameters_to_y_parameters(matrix_abcd: matrix, delta: complex):
+def convert_abcd_parameters_to_y_parameters(matrix_abcd: matrix):
     parameter_a, parameter_b, parameter_c, parameter_d, delta_abcd = get_parameters_and_delta(matrix_abcd)
 
     parameter_y11 = parameter_d / parameter_b
