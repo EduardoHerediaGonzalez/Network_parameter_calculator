@@ -1,17 +1,25 @@
 import numpy as np
 from numpy.matrixlib.defmatrix import matrix
 
-def convert_abcd_parameters_to_z_parameters(matrix_abcd: matrix, delta: complex):
-    matrix_abcd = matrix_abcd.tolist()
-    matrix_abcd_row_1 = matrix_abcd[0]
-    matrix_abcd_row_2 = matrix_abcd[1]
+def get_parameters_and_delta(matrix_x: matrix):
+    _matrix = matrix_x.tolist()
+    matrix_row_1 = _matrix[0]
+    matrix_row_2 = _matrix[1]
 
-    parameter_a = matrix_abcd_row_1[0]
-    parameter_c = matrix_abcd_row_2[0]
-    parameter_d = matrix_abcd_row_2[1]
+    parameter_11 = matrix_row_1[0]
+    parameter_12 = matrix_row_1[1]
+    parameter_21 = matrix_row_2[0]
+    parameter_22 = matrix_row_2[1]
+
+    delta = (parameter_11 * parameter_22) - (parameter_12 * parameter_21)
+
+    return parameter_11, parameter_12, parameter_21, parameter_22, delta
+
+def convert_abcd_parameters_to_z_parameters(matrix_abcd: matrix):
+    parameter_a, parameter_b, parameter_c, parameter_d, delta_abcd = get_parameters_and_delta(matrix_abcd)
 
     parameter_z11 = parameter_a / parameter_c
-    parameter_z12 = delta / parameter_c
+    parameter_z12 = delta_abcd / parameter_c
     parameter_z21 = 1 / parameter_c
     parameter_z22 = parameter_d / parameter_c
 
@@ -19,17 +27,11 @@ def convert_abcd_parameters_to_z_parameters(matrix_abcd: matrix, delta: complex)
 
     return z_parameters_matrix
 
-def convert_abcd_parameters_to_y_parameters(matrix_abcd: matrix, delta: complex):
-    matrix_abcd = matrix_abcd.tolist()
-    matrix_abcd_row_1 = matrix_abcd[0]
-    matrix_abcd_row_2 = matrix_abcd[1]
-
-    parameter_a = matrix_abcd_row_1[0]
-    parameter_b = matrix_abcd_row_1[1]
-    parameter_d = matrix_abcd_row_2[1]
+def convert_abcd_parameters_to_y_parameters(matrix_abcd: matrix):
+    parameter_a, parameter_b, parameter_c, parameter_d, delta_abcd = get_parameters_and_delta(matrix_abcd)
 
     parameter_y11 = parameter_d / parameter_b
-    parameter_y12 = -delta / parameter_b
+    parameter_y12 = -delta_abcd / parameter_b
     parameter_y21 = -1 / parameter_b
     parameter_y22 = parameter_a / parameter_d
 
@@ -37,20 +39,14 @@ def convert_abcd_parameters_to_y_parameters(matrix_abcd: matrix, delta: complex)
 
     return y_parameters_matrix
 
-def convert_abcd_parameters_to_s_parameters(ZO, matrix_abcd: matrix, delta: complex):
-    matrix_abcd = matrix_abcd.tolist()
-    matrix_abcd_row_1 = matrix_abcd[0]
-    matrix_abcd_row_2 = matrix_abcd[1]
+def convert_abcd_parameters_to_s_parameters(matrix_abcd: matrix, z_0: complex):
+    parameter_a, parameter_b, parameter_c, parameter_d, delta_abcd = get_parameters_and_delta(matrix_abcd)
+    psi = parameter_a + (parameter_b / z_0) + (parameter_c * z_0) + parameter_d
 
-    parameter_a = matrix_abcd_row_1[0]
-    parameter_b = matrix_abcd_row_1[1]
-    parameter_c = matrix_abcd_row_2[0]
-    parameter_d = matrix_abcd_row_2[1]
-
-    parameter_s11 = (parameter_a*Z0 + parameter_b - parameter_c*Z0**2 - parameter_d*Z0) / (parameter_a*Z0 + parameter_b + parameter_c*Z0**2 + parameter_d*Z0)
-    parameter_s12 = (2*(delta)*Z0) / (parameter_a*Z0 + parameter_b + parameter_c*Z0**2 + parameter_d*Z0)
-    parameter_s21 = 2*Z0 / (parameter_a*Z0 + parameter_b + parameter_c*Z0**2 + parameter_d*Z0)
-    parameter_s22 = (- parameter_a*Z0 + parameter_b - parameter_c*Z0**2 + parameter_d*Z0) / (parameter_a*Z0 + parameter_b + parameter_c*Z0**2 + parameter_d*Z0)
+    parameter_s11 =  (parameter_a + (parameter_b / z_0) - (parameter_c * z_0) - parameter_d) / psi
+    parameter_s12 =  (2 * delta_abcd) / psi
+    parameter_s21 =  2 / psi
+    parameter_s22 = (-parameter_a + (parameter_b / z_0) - (parameter_c * z_0) + parameter_d) / psi
 
     s_parameters_matrix = np.matrix[[parameter_s11, parameter_s12], [parameter_s21, parameter_s22]]
 
