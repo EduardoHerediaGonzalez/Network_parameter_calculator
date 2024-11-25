@@ -59,7 +59,7 @@ def save_frequency_parameters():
         end_frequency_value = float(end_frequency) * cfg.FREQUENCY_PREFIXES_TO_VALUE[end_frequency_prefix]
         analysis_frequency_step_value = float(analysis_frequency_step)
 
-        frequency_step_value = (end_frequency_value - start_frequency_value) / (analysis_frequency_step_value - 1)
+        """frequency_step_value = (end_frequency_value - start_frequency_value) / (analysis_frequency_step_value - 1)
 
         frequency_points_to_analyzed.append(get_frequency_with_prefixed(start_frequency_value))
 
@@ -70,7 +70,16 @@ def save_frequency_parameters():
             frequency_points_to_analyzed.append(get_frequency_with_prefixed(frequency_point_to_analyzed))
             frequency_point_to_analyzed = frequency_point_to_analyzed + frequency_step_value
 
-        frequency_points_to_analyzed.append(get_frequency_with_prefixed(end_frequency_value))
+        frequency_points_to_analyzed.append(get_frequency_with_prefixed(end_frequency_value))"""
+
+    # ************************************ Insert Step instead of number of points ************************************* #
+
+        frequency_point_to_analyzed = start_frequency_value
+
+        while frequency_point_to_analyzed <= end_frequency_value:
+            frequency_points_to_analyzed.append(get_frequency_with_prefixed(frequency_point_to_analyzed))
+            frequency_point_to_analyzed = frequency_point_to_analyzed + analysis_frequency_step_value
+    # ****************************************************************************************************************** #
 
     frequency_points = ','.join(frequency_points_to_analyzed)
     excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW, column=cfg.EXCEL_COLUMN_B).value = start_frequency + ' ' + start_frequency_prefix
@@ -209,13 +218,46 @@ def calculate_parameters():
         row_counter = row_counter + 1
 
 def plot_parameters():
-    pass
 
-def get_total_frequency_points(start_frequency, frequency_points, end_frequency):
+    excel_abcd_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_ABCD_PARAMETERS_SHEET]
+
+    frequencies = []
+    parameter_a = []
+    parameter_b = []
+    parameter_c = []
+    parameter_d = []
+
+    for row in range(cfg.EXCEL_INITIAL_ROW, excel_abcd_parameters_sheet.max_row + 1):
+        frequencies.append(excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_A).value)
+        parameter_a.append(excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_B).value)
+        parameter_b.append(excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_C).value)
+        parameter_c.append(excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_D).value)
+        parameter_d.append(excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_E).value)
+
+    return frequencies, parameter_a, parameter_b, parameter_c, parameter_d
+
+    format_to_plot = plot_parameters_in_format_combobox.get()
+
+    if format_to_plot == 'Rectangular (Magnitude vs Freq)':
+        plot_magnitude_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
+
+    elif format_to_plot == 'Rectangular (Phase vs Freq)':
+        plot_phase_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
+
+    elif format_to_plot == 'Rectangular (RI vs Freq)':
+        plot_r_i_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
+
+    elif format_to_plot == 'Polar':
+        plot_polar(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
+
+    elif format_to_plot == 'Smith chart':
+        plot_smith_chart(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
+
+def get_total_frequency_points(start_frequency, frequency_points_to_be_analyzed, end_frequency):
     frequency_points_temp = []
     frequency_range = []
 
-    for frequency_point in frequency_points:
+    for frequency_point in frequency_points_to_be_analyzed:
         value, prefix = frequency_point.split()
         frequency_point = int(value) * cfg.FREQUENCY_PREFIXES_TO_VALUE[prefix]
 
