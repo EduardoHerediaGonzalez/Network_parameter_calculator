@@ -1,13 +1,14 @@
 import os
-import tkinter as tk
-import pandas as pd
 import shutil
-from tkinter import ttk
+import tkinter as tk
 from tkinter import messagebox
+from tkinter import ttk
 
+import pandas as pd
 from openpyxl import *
-import config_parameters as cfg
+
 from source.common_two_port_circuits import *
+from source.touchstone_files.touchstone import *
 
 excel_base_template_workbook = load_workbook(filename=os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_BASE_TEMPLATE_FILE))
 excel_base_template_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
@@ -19,6 +20,10 @@ excel_network_info_sheet = excel_network_parameters_workbook[cfg.EXCEL_NETWORK_I
 
 excel_circuit_counter_row = cfg.EXCEL_INITIAL_ROW_NETWORK_ID
 frequency_points_to_analyzed = list()
+cascade_subnetworks_indexes = list()
+series_subnetworks_indexes = list()
+parallel_subnetworks_indexes = list()
+touchstone_subnetworks_indexes = list()
 touchstone_file_counter = 0
 
 def get_frequency_with_prefixed(frequency_value: float):
@@ -50,9 +55,9 @@ def save_frequency_parameters():
     end_frequency = end_frequency_entry.get()
     end_frequency_prefix = end_frequency_combobox.get()
 
-    analysis_frequency_step = analysis_frequency_step_entry.get()
+    analysis_frequency_step = analysis_frequency_points_entry.get()
 
-    if start_frequency == '' or start_frequency_prefix == '' or end_frequency == '' or end_frequency_prefix == '' or analysis_frequency_step == '':
+    if start_frequency == '' or start_frequency_prefix == '' or end_frequency == '' or end_frequency_prefix == '':
         messagebox.showerror(title='Error', message='One or more fields are empty')
     else:
         start_frequency_value = float(start_frequency) * cfg.FREQUENCY_PREFIXES_TO_VALUE[start_frequency_prefix]
@@ -81,7 +86,7 @@ def save_frequency_parameters():
         start_frequency_combobox.config(state='disable')
         end_frequency_entry.config(state='disable')
         end_frequency_combobox.config(state='disable')
-        analysis_frequency_step_entry.config(state='disable')
+        analysis_frequency_points_entry.config(state='disable')
         save_frequency_parameters_button.config(state='disable')
         calculate_parameters_button.config(state='normal')
         parameters_to_calculate_combobox.config(state='normal')
@@ -178,8 +183,8 @@ def save_sub_networks():
         start_frequency_combobox.config(state='normal')
         end_frequency_entry.config(state='normal')
         end_frequency_combobox.config(state='normal')
+        analysis_frequency_points_entry.config(state='normal')
 
-    analysis_frequency_step_entry.config(state='normal')
     save_frequency_parameters_button.config(state='normal')
 
 def calculate_parameters():
@@ -194,6 +199,8 @@ def calculate_parameters():
         excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
 
         _sub_networks, _sub_networks_interconnection = get_sub_networks_info()
+
+        get_indexes_of_subnetworks_interconnection(_sub_networks_interconnection)
 
         frequency_range = get_frequency_range()
 
@@ -387,26 +394,46 @@ def add_touchstone_file():
     global excel_circuit_counter_row
 
     if os.path.exists(touchstone_file_path):
-        touchstone_file_counter = touchstone_file_counter + 1
-        touchstone_txt_file_name = cfg.TOUCHSTONE_FILE_NAME + str(touchstone_file_counter) + cfg.TXT_EXTENSION
-        shutil.copy2(touchstone_file_path, os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, touchstone_txt_file_name))
+        shutil.copy2(touchstone_file_path, os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.TXT_TOUCHSTONE_FILE_NAME))
 
-        touchstone_excel_file_name = cfg.TOUCHSTONE_FILE_NAME + str(touchstone_file_counter) + cfg.EXCEL_EXTENSION
-        data_frame = pd.read_csv(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, touchstone_txt_file_name), sep=',')
-        data_frame.to_excel(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, touchstone_excel_file_name), index=False)
-        os.remove(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, touchstone_txt_file_name))
+        data_frame = pd.read_csv(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.TXT_TOUCHSTONE_FILE_NAME), sep=',')
+        data_frame.to_excel(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.EXCEL_TOUCHSTONE_FILE_NAME), index=False)
+        os.remove(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.TXT_TOUCHSTONE_FILE_NAME))
 
         sub_networks_counter = counter_of_sub_networks.get()
         sub_networks_counter = sub_networks_counter + 1
 
         excel_network_info_sheet.cell(row=excel_circuit_counter_row, column=cfg.EXCEL_COLUMN_A, value=str(sub_networks_counter))
-        excel_network_info_sheet.cell(row=excel_circuit_counter_row, column=cfg.EXCEL_COLUMN_C, value=touchstone_excel_file_name)
+        excel_network_info_sheet.cell(row=excel_circuit_counter_row, column=cfg.EXCEL_COLUMN_B, value=cfg.TOUCHSTONE_CONNECTION)
+        excel_network_info_sheet.cell(row=excel_circuit_counter_row, column=cfg.EXCEL_COLUMN_C, value=cfg.EXCEL_TOUCHSTONE_FILE_NAME)
         excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
+        excel_touchstone_workbook = load_workbook(filename=os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.EXCEL_TOUCHSTONE_FILE_NAME))
+        excel_touchstone_sheet = excel_touchstone_workbook[cfg.EXCEL_DEFAULT_SHEET_NAME]
+
+        (start_frequency, end_frequency, analysis_frequency_step) = get_start_and_end_frequencies(excel_touchstone_sheet)
+
+        start_frequency = get_frequency_with_prefixed(start_frequency)
+        end_frequency = get_frequency_with_prefixed(end_frequency)
+
+        start_frequency = start_frequency.split(' ')
+        start_frequency_prefix = start_frequency[1]
+        start_frequency = start_frequency[0]
+        reset_start_frequency_entry.set(start_frequency)
+        start_frequency_combobox.current(cfg.FREQUENCY_PREFIXES.index(start_frequency_prefix))
+
+        end_frequency = end_frequency.split(' ')
+        end_frequency_prefix = end_frequency[1]
+        end_frequency = end_frequency[0]
+        reset_end_frequency_entry.set(end_frequency)
+        end_frequency_combobox.current(cfg.FREQUENCY_PREFIXES.index(end_frequency_prefix))
+
+        reset_analysis_frequency_points_entry.set(analysis_frequency_step)
 
         reset_touchstone_file_entry.set('')
         sub_networks_counter = counter_of_sub_networks.get()
         sub_networks_counter = sub_networks_counter + 1
         counter_of_sub_networks.set(sub_networks_counter)
+        touchstone_file_counter = 1
 
         if sub_networks_counter == 1:
             save_sub_networks_button.config(state='normal')
@@ -414,14 +441,26 @@ def add_touchstone_file():
     else:
         messagebox.showerror(title='Error', message='Touchstone file not found. Check that the path or filename is correct.')
 
+def get_indexes_of_subnetworks_interconnection(subnetworks_interconnection: list):
+    index_counter = 0
+
+    for sub_network_interconnection in subnetworks_interconnection:
+        if sub_network_interconnection == 'Series connection':
+            series_subnetworks_indexes.append(index_counter)
+        elif sub_network_interconnection == 'Parallel connection':
+            parallel_subnetworks_indexes.append(index_counter)
+        elif sub_network_interconnection == 'Cascade connection':
+            cascade_subnetworks_indexes.append(index_counter)
+        else:
+            touchstone_subnetworks_indexes.append(index_counter)
+
+        index_counter = index_counter + 1
 
 mainWindow = tk.Tk()
 mainWindow.title("Two-port network parameter calculator")
 mainWindow.geometry('800x600')
 
 counter_of_sub_networks = tk.IntVar(mainWindow, 0)
-reset_analysis_frequency_step_entry = tk.StringVar(mainWindow, '')
-reset_frequency_point_to_analyze_combobox = tk.StringVar(mainWindow, '')
 reset_type_of_circuit_combobox = tk.StringVar(mainWindow, '')
 reset_type_of_connection_combobox = tk.StringVar(mainWindow, '')
 reset_element_A_combobox = tk.StringVar(mainWindow, '')
@@ -432,6 +471,9 @@ reset_element_C_combobox = tk.StringVar(mainWindow, '')
 reset_element_C_entry = tk.StringVar(mainWindow, '')
 reset_characteristic_impedance_entry = tk.StringVar(mainWindow, '')
 reset_touchstone_file_entry = tk.StringVar(mainWindow, '')
+reset_start_frequency_entry = tk.StringVar(mainWindow, '')
+reset_end_frequency_entry = tk.StringVar(mainWindow, '')
+reset_analysis_frequency_points_entry = tk.StringVar(mainWindow, '')
 
 # Start of frame 1 #
 row = 0
@@ -541,7 +583,7 @@ row = row + 1
 
 start_frequency_label = ttk.Label(frame_2, text = 'Start frequency')
 start_frequency_label.grid(row=row, column=0)
-start_frequency_entry = ttk.Entry(frame_2, state='disable')
+start_frequency_entry = ttk.Entry(frame_2, state='disable', textvariable=reset_start_frequency_entry)
 start_frequency_entry.grid(row=row, column=1)
 start_frequency_combobox = ttk.Combobox(frame_2, state='disable', values = cfg.FREQUENCY_PREFIXES)
 start_frequency_combobox.grid(row=row, column=2)
@@ -550,17 +592,17 @@ row = row + 1
 
 end_frequency_label = ttk.Label(frame_2, text='End frequency')
 end_frequency_label.grid(row=row, column=0)
-end_frequency_entry = ttk.Entry(frame_2, state='disable')
+end_frequency_entry = ttk.Entry(frame_2, state='disable', textvariable=reset_end_frequency_entry)
 end_frequency_entry.grid(row=row, column=1)
 end_frequency_combobox = ttk.Combobox(frame_2, state='disable', values=cfg.FREQUENCY_PREFIXES)
 end_frequency_combobox.grid(row=row, column=2)
 
 row = row + 1
 
-analysis_frequency_step_label = ttk.Label(frame_2, text='Analysis frequency step')
-analysis_frequency_step_label.grid(row=row, column=0)
-analysis_frequency_step_entry = ttk.Entry(frame_2, state='disable', textvariable=reset_analysis_frequency_step_entry)
-analysis_frequency_step_entry.grid(row=row, column=1)
+analysis_frequency_points_label = ttk.Label(frame_2, text='Analysis frequency points')
+analysis_frequency_points_label.grid(row=row, column=0)
+analysis_frequency_points_entry = ttk.Entry(frame_2, state='disable', textvariable=reset_analysis_frequency_points_entry)
+analysis_frequency_points_entry.grid(row=row, column=1)
 
 row = row + 1
 
