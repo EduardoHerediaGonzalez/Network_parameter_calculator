@@ -4,6 +4,7 @@ import pandas as pd
 import shutil
 from tkinter import ttk
 from tkinter import messagebox
+from Plot_Parameters import plot_magnitude_vs_frequency, plot_phase_vs_frequency, plot_r_i_vs_frequency, plot_polar, plot_smith_chart
 
 from openpyxl import *
 import config_parameters as cfg
@@ -94,6 +95,10 @@ def save_frequency_parameters():
     analysis_frequency_step_entry.config(state='disable')
     save_frequency_parameters_button.config(state='disable')
     parameters_to_calculate_combobox.config(state='normal')
+    plot_parameters_in_format_combobox.config(state='normal')
+    calculate_parameters_button.config(state='normal')
+    plot_parameters_button.config(state='normal')
+
 
 def save_network_parameters():
     parameters_to_calculate = parameters_to_calculate_combobox.get()
@@ -227,14 +232,19 @@ def plot_parameters():
     parameter_c = []
     parameter_d = []
 
-    for row in range(cfg.EXCEL_INITIAL_ROW, excel_abcd_parameters_sheet.max_row + 1):
-        frequencies.append(excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_A).value)
-        parameter_a.append(excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_B).value)
-        parameter_b.append(excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_C).value)
-        parameter_c.append(excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_D).value)
-        parameter_d.append(excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_E).value)
+    for row in range(cfg.EXCEL_INITIAL_ROW, excel_abcd_parameters_sheet.max_row):
 
-    return frequencies, parameter_a, parameter_b, parameter_c, parameter_d
+        frequencies.append(excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_A).value)
+
+        a = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_B).value
+        b = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_C).value
+        c = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_D).value
+        d = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_E).value
+
+        parameter_a.append(complex(a))
+        parameter_b.append(complex(b))
+        parameter_c.append(complex(c))
+        parameter_d.append(complex(d))
 
     format_to_plot = plot_parameters_in_format_combobox.get()
 
@@ -259,7 +269,7 @@ def get_total_frequency_points(start_frequency, frequency_points_to_be_analyzed,
 
     for frequency_point in frequency_points_to_be_analyzed:
         value, prefix = frequency_point.split()
-        frequency_point = int(value) * cfg.FREQUENCY_PREFIXES_TO_VALUE[prefix]
+        frequency_point = float(value) * cfg.FREQUENCY_PREFIXES_TO_VALUE[prefix]
 
         frequency_points_temp.append(frequency_point)
 
@@ -322,9 +332,9 @@ def get_sub_networks_info():
     while excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_A).value is not None:
         interconnection_type = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_B).value
         sub_networks_interconnection.append(interconnection_type)
-        characteristic_impedance = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_J).value
-        characteristic_impedance = int(characteristic_impedance)
-        characteristic_impedance_list.append(characteristic_impedance)
+        #characteristic_impedance = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_J).value
+        #characteristic_impedance = int(characteristic_impedance)
+        #characteristic_impedance_list.append(characteristic_impedance)
 
         circuit_type = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_C).value
         print(characteristic_impedance_list)
