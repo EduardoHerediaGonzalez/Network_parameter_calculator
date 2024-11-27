@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from network_parameter_conversions import convert_abcd_parameters_to_s_parameters
+import skrf as rf
 
  # **************************** Por ahora asumiendo que se calculan paráMetros ABCD ************************************
 
@@ -149,8 +151,47 @@ def plot_polar(frequencies, parameter_a, parameter_b, parameter_c, parameter_d):
     plt.tight_layout(rect=(0, 0, 1, 0.95))
     plt.show()
 
-def plot_smith_chart(frequencies, parameter_a, parameter_b, parameter_c, parameter_d):
-    pass
+def plot_smith_chart(frequencies, parameter_a, parameter_b, parameter_c, parameter_d, z_0=50):
+
+    s_parameters_a = []
+    s_parameters_b = []
+    s_parameters_c = []
+    s_parameters_d = []
+
+    for a, b, c, d in zip(parameter_a, parameter_b, parameter_c, parameter_d):
+        matrix_abcd = np.matrix([[a, b], [c, d]])
+        s_matrix = convert_abcd_parameters_to_s_parameters(matrix_abcd, z_0)
+
+        s_parameters_a.append(s_matrix[0, 0])  # S11
+        s_parameters_b.append(s_matrix[0, 1])  # S12
+        s_parameters_c.append(s_matrix[1, 0])  # S21
+        s_parameters_d.append(s_matrix[1, 1])  # S22
+
+    fig, axs = plt.subplots(2, 2, figsize=(12, 8))
+    fig.suptitle("Smith Chart for Network Parameters", fontsize=16)
+
+    ax = axs[0, 0]
+    rf.plotting.plot_smith(s=np.array(s_parameters_a), ax=ax, label="S11 (Parameter A)", color="blue")
+    ax.set_title("Parameter A (S11)")
+    ax.legend()
+
+    ax = axs[0, 1]
+    rf.plotting.plot_smith(s=np.array(s_parameters_b), ax=ax, label="S12 (Parameter B)", color="orange")
+    ax.set_title("Parameter B (S12)")
+    ax.legend()
+
+    ax = axs[1, 0]
+    rf.plotting.plot_smith(s=np.array(s_parameters_c), ax=ax, label="S21 (Parameter C)", color="green")
+    ax.set_title("Parameter C (S21)")
+    ax.legend()
+
+    ax = axs[1, 1]
+    rf.plotting.plot_smith(s=np.array(s_parameters_d), ax=ax, label="S22 (Parameter D)", color="red")
+    ax.set_title("Parameter D (S22)")
+    ax.legend()
+
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    plt.show()
 
  # Get values for functions
 def magnitude_in_db(parameter):
@@ -169,7 +210,7 @@ def extract_real_imag(parameter):
     real_part = [np.real(x) for x in parameter]
     imag_part = [np.imag(x) for x in parameter]
     return real_part, imag_part
-
+'''
 def generate_smith_chart():
     fig, ax = plt.subplots(figsize=(8, 8))
     ax.set_aspect('equal')
@@ -234,3 +275,4 @@ def generate_smith_chart():
     ax.axis('off')
     ax.legend(loc='upper left', fontsize=10)
     plt.show()
+'''

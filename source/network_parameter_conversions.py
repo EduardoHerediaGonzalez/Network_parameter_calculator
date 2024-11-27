@@ -48,6 +48,6 @@ def convert_abcd_parameters_to_s_parameters(matrix_abcd: matrix, z_0: complex):
     parameter_s21 =  2 / psi
     parameter_s22 = (-parameter_a + (parameter_b / z_0) - (parameter_c * z_0) + parameter_d) / psi
 
-    s_parameters_matrix = np.matrix[[parameter_s11, parameter_s12], [parameter_s21, parameter_s22]]
+    s_parameters_matrix = np.matrix([[parameter_s11, parameter_s12], [parameter_s21, parameter_s22]])
 
     return s_parameters_matrix
