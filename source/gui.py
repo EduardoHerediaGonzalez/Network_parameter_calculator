@@ -19,11 +19,13 @@ excel_network_parameters_workbook = load_workbook(filename=os.path.join(os.getcw
 excel_network_info_sheet = excel_network_parameters_workbook[cfg.EXCEL_NETWORK_INFO_SHEET]
 
 excel_circuit_counter_row = cfg.EXCEL_INITIAL_ROW_NETWORK_ID
+sub_networks = list()
+sub_networks_interconnection = list()
 frequency_range = list()
-cascade_subnetworks_indexes = list()
-series_subnetworks_indexes = list()
-parallel_subnetworks_indexes = list()
-touchstone_subnetworks_indexes = list()
+cascade_sub_networks_indexes = list()
+series_sub_networks_indexes = list()
+parallel_sub_networks_indexes = list()
+touchstone_sub_networks_indexes = list()
 touchstone_file_counter = 0
 
 def add_touchstone_file():
@@ -74,8 +76,6 @@ def add_touchstone_file():
         analysis_frequency_step_combobox.current(cfg.FREQUENCY_PREFIXES.index(analysis_frequency_step_prefix))
 
         reset_touchstone_file_entry.set('')
-        sub_networks_counter = counter_of_sub_networks.get()
-        sub_networks_counter = sub_networks_counter + 1
         counter_of_sub_networks.set(sub_networks_counter)
         touchstone_file_counter = 1
 
@@ -160,6 +160,7 @@ def save_sub_networks():
         end_frequency_entry.config(state='normal')
         end_frequency_combobox.config(state='normal')
         analysis_frequency_step_entry.config(state='normal')
+        analysis_frequency_step_combobox.config(state='normal')
 
     save_frequency_parameters_button.config(state='normal')
 
@@ -175,17 +176,18 @@ def save_frequency_parameters():
 
     if start_frequency == '' or start_frequency_prefix == '' or end_frequency == '' or end_frequency_prefix == '' or analysis_frequency_step == '':
         messagebox.showerror(title='Error', message='One or more fields are empty')
+        
     else:
         start_frequency_value = float(start_frequency) * cfg.FREQUENCY_PREFIXES_TO_VALUE[start_frequency_prefix]
         end_frequency_value = float(end_frequency) * cfg.FREQUENCY_PREFIXES_TO_VALUE[end_frequency_prefix]
         analysis_frequency_step_value = float(analysis_frequency_step) * cfg.FREQUENCY_PREFIXES_TO_VALUE[analysis_frequency_step_prefix]
 
-        total_of_frequency_points =  ((end_frequency_value - start_frequency_value) / analysis_frequency_step_value) + 1
+        total_of_frequency_points =  round(((end_frequency_value - start_frequency_value) / analysis_frequency_step_value) + 1)
 
         frequency_range.append(start_frequency_value)
         current_frequency_point_value = start_frequency_value
 
-        for frequency_point_counter in range(int(total_of_frequency_points - 1)):
+        for frequency_point_counter in range(1, total_of_frequency_points):
             current_frequency_point_value = current_frequency_point_value + analysis_frequency_step_value
             frequency_range.append(current_frequency_point_value)
 
@@ -204,26 +206,25 @@ def save_frequency_parameters():
         parameters_to_calculate_combobox.config(state='normal')
 
 def calculate_parameters():
-    _sub_networks = list()
-    _sub_networks_interconnection = list()
+    global sub_networks
+    global sub_networks_interconnection
     excel_abcd_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_ABCD_PARAMETERS_SHEET]
 
     parameters_to_calculate = parameters_to_calculate_combobox.get()
 
     if parameters_to_calculate != '':
+        excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 4, column=cfg.EXCEL_COLUMN_B).value = cfg.DEFAULT_NETWORK_TYPE
         excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 5, column=cfg.EXCEL_COLUMN_B).value = parameters_to_calculate
         excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
 
-        _sub_networks, _sub_networks_interconnection = get_sub_networks_info()
+        get_sub_networks_info()
 
-        get_indexes_of_subnetworks_interconnection(_sub_networks_interconnection)
-
-        # frequency_range = get_frequency_range()
+        get_indexes_of_sub_networks_interconnection()
 
         row_counter = cfg.EXCEL_INITIAL_ROW
 
         for frequency in frequency_range:
-            abcd_parameters = get_total_abcd_matrix_parameters(sub_networks=_sub_networks, sub_networks_interconnection=_sub_networks_interconnection, frequency=frequency)
+            abcd_parameters = get_total_abcd_matrix_parameters(frequency=frequency)
 
             excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency
             excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(abcd_parameters[cfg.PARAMETER_A_INDEX]).strip('()')
@@ -233,6 +234,7 @@ def calculate_parameters():
             excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
 
             row_counter = row_counter + 1
+    
     else:
         messagebox.showerror(title='Error', message='Empty parameters to calculate')
 
@@ -300,8 +302,8 @@ def join_value_and_prefix(value: str):
 
 def get_sub_networks_info():
     sub_network_id_counter = cfg.EXCEL_INITIAL_ROW_NETWORK_ID
-    sub_networks = []
-    sub_networks_interconnection = []
+    global sub_networks
+    global sub_networks_interconnection
 
     while excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_A).value is not None:
         interconnection_type = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_B).value
@@ -351,27 +353,36 @@ def get_sub_networks_info():
 
         sub_network_id_counter = sub_network_id_counter + 1
 
-    return sub_networks, sub_networks_interconnection
+    # return sub_networks, sub_networks_interconnection
 
-def get_total_abcd_matrix_parameters(sub_networks: list, sub_networks_interconnection: list, frequency: int):
-    abcd_parameters: list
+def get_total_abcd_matrix_parameters(frequency: float):
+    global sub_networks
+    global sub_networks_interconnection
+
+    abcd_parameters_matrix: list
     sub_networks_abcd_matrices = list()
     current_matrix_index = 0
     total_abcd_matrix = complex(0,0)
-    total_of_subnetworks = len(sub_networks)
-    total_of_cascade_interconnection = len(sub_networks_interconnection)
+    total_of_sub_networks = len(sub_networks)
+    total_of_cascade_interconnection = len(cascade_sub_networks_indexes)
+    total_of_series_interconnection = len(series_sub_networks_indexes)
+    total_of_parallel_interconnection = len(parallel_sub_networks_indexes)
+    total_of_touchstone_interconnection = len(touchstone_sub_networks_indexes)
+
+    #while len(sub_networks_abcd_matrices) < total_of_sub_networks:
 
     for sub_network in sub_networks:
         sub_networks_abcd_matrices.append(sub_network.get_matrix_abcd(at_frequency=frequency))
 
-    if total_of_subnetworks == 1:
+    if total_of_sub_networks == 1:
         total_abcd_matrix = sub_networks_abcd_matrices[current_matrix_index]
+    
     else:
-        if total_of_subnetworks == total_of_cascade_interconnection:
+        if total_of_sub_networks == total_of_cascade_interconnection:
             total_abcd_matrix = sub_networks_abcd_matrices[current_matrix_index]
             current_matrix_index = current_matrix_index + 1
 
-            while current_matrix_index < total_of_subnetworks:
+            while current_matrix_index < total_of_sub_networks:
                 total_abcd_matrix = total_abcd_matrix * sub_networks_abcd_matrices[current_matrix_index]
                 current_matrix_index = current_matrix_index + 1
         else:
@@ -388,24 +399,26 @@ def get_total_abcd_matrix_parameters(sub_networks: list, sub_networks_interconne
     parameter_c = parameter_c
     parameter_d = parameter_d
 
-    abcd_parameters = [parameter_a, parameter_b, parameter_c, parameter_d]
+    abcd_parameters_matrix = [parameter_a, parameter_b, parameter_c, parameter_d]
 
     sub_networks_abcd_matrices.clear()
 
-    return abcd_parameters
+    return abcd_parameters_matrix
 
-def get_indexes_of_subnetworks_interconnection(subnetworks_interconnection: list):
+def get_indexes_of_sub_networks_interconnection():
+    global sub_networks_interconnection
+
     index_counter = 0
 
-    for sub_network_interconnection in subnetworks_interconnection:
+    for sub_network_interconnection in sub_networks_interconnection:
         if sub_network_interconnection == 'Series connection':
-            series_subnetworks_indexes.append(index_counter)
+            series_sub_networks_indexes.append(index_counter)
         elif sub_network_interconnection == 'Parallel connection':
-            parallel_subnetworks_indexes.append(index_counter)
+            parallel_sub_networks_indexes.append(index_counter)
         elif sub_network_interconnection == 'Cascade connection':
-            cascade_subnetworks_indexes.append(index_counter)
+            cascade_sub_networks_indexes.append(index_counter)
         else:
-            touchstone_subnetworks_indexes.append(index_counter)
+            touchstone_sub_networks_indexes.append(index_counter)
 
         index_counter = index_counter + 1
 
@@ -535,27 +548,27 @@ row = row + 1
 
 start_frequency_label = ttk.Label(frame_2, text = 'Start frequency')
 start_frequency_label.grid(row=row, column=0)
-start_frequency_entry = ttk.Entry(frame_2, state='disable', textvariable=reset_start_frequency_entry)
+start_frequency_entry = ttk.Entry(frame_2, state='normal', textvariable=reset_start_frequency_entry)
 start_frequency_entry.grid(row=row, column=1)
-start_frequency_combobox = ttk.Combobox(frame_2, state='disable', values = cfg.FREQUENCY_PREFIXES)
+start_frequency_combobox = ttk.Combobox(frame_2, state='normal', values = cfg.FREQUENCY_PREFIXES)
 start_frequency_combobox.grid(row=row, column=2)
 
 row = row + 1
 
 end_frequency_label = ttk.Label(frame_2, text='End frequency')
 end_frequency_label.grid(row=row, column=0)
-end_frequency_entry = ttk.Entry(frame_2, state='disable', textvariable=reset_end_frequency_entry)
+end_frequency_entry = ttk.Entry(frame_2, state='normal', textvariable=reset_end_frequency_entry)
 end_frequency_entry.grid(row=row, column=1)
-end_frequency_combobox = ttk.Combobox(frame_2, state='disable', values=cfg.FREQUENCY_PREFIXES)
+end_frequency_combobox = ttk.Combobox(frame_2, state='normal', values=cfg.FREQUENCY_PREFIXES)
 end_frequency_combobox.grid(row=row, column=2)
 
 row = row + 1
 
 analysis_frequency_step_label = ttk.Label(frame_2, text='Analysis frequency step')
 analysis_frequency_step_label.grid(row=row, column=0)
-analysis_frequency_step_entry = ttk.Entry(frame_2, state='disable', textvariable=reset_analysis_frequency_step_entry)
+analysis_frequency_step_entry = ttk.Entry(frame_2, state='normal', textvariable=reset_analysis_frequency_step_entry)
 analysis_frequency_step_entry.grid(row=row, column=1)
-analysis_frequency_step_combobox = ttk.Combobox(frame_2, state='disable', values = cfg.FREQUENCY_PREFIXES)
+analysis_frequency_step_combobox = ttk.Combobox(frame_2, state='normal', values = cfg.FREQUENCY_PREFIXES)
 analysis_frequency_step_combobox.grid(row=row, column=2)
 
 row = row + 1
@@ -564,7 +577,7 @@ spacer_5.grid(row=row, column=0)
 
 row = row + 1
 
-save_frequency_parameters_button = ttk.Button(frame_2, text='Save frequency parameters', state='disable', command=save_frequency_parameters)
+save_frequency_parameters_button = ttk.Button(frame_2, text='Save frequency parameters', state='normal', command=save_frequency_parameters)
 save_frequency_parameters_button.grid(row=row, column=0)
 
 row = row + 1
