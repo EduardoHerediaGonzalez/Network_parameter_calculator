@@ -1,11 +1,8 @@
 import matplotlib.pyplot as plt
-import numpy as np
-from network_parameter_conversions import convert_abcd_parameters_to_s_parameters
 import skrf as rf
 
- # **************************** Por ahora asumiendo que se calculan paráMetros ABCD ************************************
+from network_parameter_conversions import *
 
- # Plot functions
 def plot_magnitude_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d):
 
     parameter_a_db = [magnitude_in_db(A) for A in parameter_a]
@@ -115,7 +112,7 @@ def plot_r_i_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, pa
     plt.tight_layout(rect=(0, 0, 1, 0.95))
     plt.show()
 
-def plot_polar(frequencies, parameter_a, parameter_b, parameter_c, parameter_d):
+def plot_polar(parameter_a, parameter_b, parameter_c, parameter_d):
     pass
     magnitude_a = np.abs(parameter_a)
     phase_a = np.angle(parameter_a, deg=True)
@@ -151,7 +148,7 @@ def plot_polar(frequencies, parameter_a, parameter_b, parameter_c, parameter_d):
     plt.tight_layout(rect=(0, 0, 1, 0.95))
     plt.show()
 
-def plot_smith_chart(frequencies, parameter_a, parameter_b, parameter_c, parameter_d, z_0=50):
+def plot_smith_chart(parameter_a, parameter_b, parameter_c, parameter_d, z_0=50):
 
     s_parameters_a = []
     s_parameters_b = []
@@ -160,7 +157,7 @@ def plot_smith_chart(frequencies, parameter_a, parameter_b, parameter_c, paramet
 
     for a, b, c, d in zip(parameter_a, parameter_b, parameter_c, parameter_d):
         matrix_abcd = np.matrix([[a, b], [c, d]])
-        s_matrix = convert_abcd_parameters_to_s_parameters(matrix_abcd, z_0)
+        s_matrix = convert_ABCD_matrix_to_S_matrix(matrix_abcd, z_0)
 
         s_parameters_a.append(s_matrix[0, 0])  # S11
         s_parameters_b.append(s_matrix[0, 1])  # S12
@@ -190,7 +187,7 @@ def plot_smith_chart(frequencies, parameter_a, parameter_b, parameter_c, paramet
     ax.set_title("Parameter D (S22)")
     ax.legend()
 
-    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    plt.tight_layout(rect=[0.0, 0.0, 1.0, 0.95])
     plt.show()
 
  # Get values for functions
@@ -202,7 +199,7 @@ def phase_in_degrees(parameter):
     real_part = np.real(parameter)
     imag_part = np.imag(parameter)
     phase_radians = np.arctan2(imag_part, real_part)
-    phase_degrees = (180*(phase_radians)) / np.pi
+    phase_degrees = (180 * phase_radians) / np.pi
 
     return phase_degrees
 
@@ -210,69 +207,3 @@ def extract_real_imag(parameter):
     real_part = [np.real(x) for x in parameter]
     imag_part = [np.imag(x) for x in parameter]
     return real_part, imag_part
-'''
-def generate_smith_chart():
-    fig, ax = plt.subplots(figsize=(8, 8))
-    ax.set_aspect('equal')
-    ax.set_xlim(-1.1, 1.1)
-    ax.set_ylim(-1.1, 1.1)
-    ax.set_title("Smith Chart", fontsize=16)
-
-    # Unit circumference
-    theta = np.linspace(0, 2 * np.pi, 500)
-    ax.plot(np.cos(theta), np.sin(theta), 'k-', linewidth=0.8)
-
-    # Resistance Axes
-    ax.axhline(0, color='k', linewidth=0.5, linestyle='--')
-
-    # Resistance values
-    resistances = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.7, 0.8, 0.9, 1, 1.2, 1.4, 1.6, 1.8, 2, 2.5, 3, 3.5, 4, 4.5, 5,
-                   10, 12, 14, 16, 18, 20]
-    for r in resistances:
-        center_x = r / (1 + r)
-        radius = 1 / (1 + r)
-        theta_resistance = np.linspace(0, 2 * np.pi, 500)
-        x_res = center_x + radius * np.cos(theta_resistance)
-        y_res = radius * np.sin(theta_resistance)
-
-        # Cut edge and plot
-        mask = x_res ** 2 + y_res ** 2 <= 1
-        ax.plot(x_res[mask], y_res[mask], color='grey', linewidth=0.5)
-
-    # Reactance values
-    reactances = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.7, 0.8, 0.9, 1, 1.2, 1.4, 1.6, 1.8, 2, 2.5, 3, 3.5, 4, 4.5, 5,
-                  10, 12, 14, 16, 18, 20]
-    for x in reactances:
-        # Inductance Reactance
-        center_x = 1
-        center_y = 1 / x
-        radius = np.abs(center_y)
-        theta_react = np.linspace(-np.pi / 2, np.pi / 2, 500)
-        x_pos = center_x - radius * np.cos(theta_react)
-        y_pos = center_y - radius * np.sin(theta_react)
-
-        # Cut edge and plot
-        mask_pos = x_pos ** 2 + y_pos ** 2 <= 1
-        ax.plot(x_pos[mask_pos], y_pos[mask_pos], color='grey', linewidth=0.5)
-
-        # Capacitive reactance
-        center_y = -1 / x
-        y_neg = center_y + radius * np.sin(theta_react)
-
-        # Cut edge and plot
-        mask_neg = x_pos ** 2 + y_neg ** 2 <= 1
-        ax.plot(x_pos[mask_neg], y_neg[mask_neg], color='grey', linewidth=0.5)
-
-    ax.text(0, 1.05, "Resistance and Reactance Normalized Values", fontsize=12, ha="center", color="black")
-
-    for i, r in enumerate(resistances):
-        ax.text(1.05, 1 - (i * 0.075), f"{r}", color='black', fontsize=8, ha="left")
-
-    ax.text(1.05, 1 - (len(resistances) * 0.075), "From left to right", color='black', fontsize=7, ha="left",
-            verticalalignment="top")
-
-    ax.grid(False)
-    ax.axis('off')
-    ax.legend(loc='upper left', fontsize=10)
-    plt.show()
-'''

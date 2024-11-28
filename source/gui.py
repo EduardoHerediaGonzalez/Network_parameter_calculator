@@ -8,9 +8,8 @@ import pandas as pd
 from openpyxl import *
 
 from source.common_two_port_circuits import *
+from source.plot_parameters import *
 from source.touchstone_files.touchstone import *
-from source.network_parameter_conversions import *
-from source.Plot_Parameters import *
 
 excel_base_template_workbook = load_workbook(filename=os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_BASE_TEMPLATE_FILE))
 excel_base_template_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
@@ -305,7 +304,7 @@ def plot_parameters():
         plot_r_i_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
 
     elif format_to_plot == 'Polar':
-        plot_polar(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
+        plot_polar(parameter_a, parameter_b, parameter_c, parameter_d)
 
     elif format_to_plot == 'Smith chart':
         plot_smith_chart(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
