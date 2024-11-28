@@ -22,7 +22,7 @@ class SeriesImpedanceCircuit:
 
         return  int(self.__delta_abcd.real)
 
-    def get_matrix_abcd(self, at_frequency):
+    def get_ABCD_matrix(self, at_frequency):
         self.__matrix_abcd = np.matrix([[self.__parameter_a, self.__impedance.get_impedance(at_frequency=at_frequency)], [self.__parameter_c, self.__parameter_d]])
 
         return self.__matrix_abcd
@@ -48,7 +48,7 @@ class ShuntImpedanceCircuit:
 
         return  int(self.__delta_abcd.real)
 
-    def get_matrix_abcd(self, at_frequency):
+    def get_ABCD_matrix(self, at_frequency):
         self.__matrix_abcd = np.matrix([[self.__parameter_a, self.__parameter_b], [self.__admittance.get_admittance(at_frequency=at_frequency), self.__parameter_d]])
 
         return self.__matrix_abcd
@@ -118,7 +118,7 @@ class TCircuit:
 
         return  self.__delta_abcd
 
-    def get_matrix_abcd(self, at_frequency):
+    def get_ABCD_matrix(self, at_frequency):
         parameter_a = self.__get_parameter_a(at_frequency=at_frequency)
         parameter_b = self.__get_parameter_b(at_frequency=at_frequency)
         parameter_c = self.__get_parameter_c(at_frequency=at_frequency)
@@ -190,7 +190,7 @@ class PiCircuit:
 
         return self.__delta_abcd
 
-    def get_matrix_abcd(self, at_frequency):
+    def get_ABCD_matrix(self, at_frequency):
         self.__matrix_abcd = np.matrix(
             [[self.__get_parameter_a(at_frequency=at_frequency), self.__get_parameter_b(at_frequency=at_frequency)],
              [self.__get_parameter_c(at_frequency=at_frequency), self.__get_parameter_d(at_frequency=at_frequency)]],
