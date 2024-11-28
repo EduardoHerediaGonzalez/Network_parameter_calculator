@@ -115,11 +115,11 @@ def add_sub_network():
         excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_B, value = type_of_interconnection)
         excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_C, value = type_of_circuit)
         excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_D, value = element_a)
-        excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_E, value = join_value_and_prefix(element_a_value))
+        excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_E, value = join_value_and_prefix(element_a_value, element_a))
         excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_F, value = element_b)
-        excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_G, value = join_value_and_prefix(element_b_value))
+        excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_G, value = join_value_and_prefix(element_b_value, element_b))
         excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_H, value = element_c)
-        excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_I, value = join_value_and_prefix(element_c_value))
+        excel_network_info_sheet.cell(row = excel_circuit_counter_row, column = cfg.EXCEL_COLUMN_I, value = join_value_and_prefix(element_c_value, element_c))
         excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
 
         excel_circuit_counter_row = excel_circuit_counter_row + 1
@@ -205,7 +205,10 @@ def save_frequency_parameters():
 def calculate_parameters():
     global sub_networks
     global sub_networks_interconnection
-    excel_abcd_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_ABCD_PARAMETERS_SHEET]
+    excel_ABCD_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_ABCD_PARAMETERS_SHEET]
+    excel_Z_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_Z_PARAMETERS_SHEET]
+    excel_Y_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_Y_PARAMETERS_SHEET]
+    excel_S_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_S_PARAMETERS_SHEET]
 
     parameters_to_calculate = parameters_to_calculate_combobox.get()
 
@@ -220,16 +223,47 @@ def calculate_parameters():
 
         for frequency in frequency_range:
             total_ABCD_matrix = get_total_ABCD_matrix(at_frequency=frequency)
-            (parameter_a, parameter_b , parameter_c, parameter_d, delta) = get_parameters_and_delta_from_matrix(total_ABCD_matrix)
+            total_Z_matrix = convert_ABCD_matrix_to_Z_matrix(abcd_matrix=total_ABCD_matrix)
+            total_Y_matrix = convert_ABCD_matrix_to_Y_matrix(abcd_matrix=total_ABCD_matrix)
+            total_S_matrix = convert_ABCD_matrix_to_S_matrix(abcd_matrix=total_ABCD_matrix, z_0=50)
 
-            excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency
-            excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(parameter_a).strip('()')
-            excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = str(parameter_b).strip('()')
-            excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(parameter_c).strip('()')
-            excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(parameter_d).strip('()')
+            (parameter_a, parameter_b , parameter_c, parameter_d, delta) = get_parameters_and_delta_from_matrix(total_ABCD_matrix)
+            (parameter_z11, parameter_z12, parameter_z21, parameter_z22, delta) = get_parameters_and_delta_from_matrix(total_Z_matrix)
+            (parameter_y11, parameter_y12, parameter_y21, parameter_y22, delta) = get_parameters_and_delta_from_matrix(total_Y_matrix)
+            (parameter_s11, parameter_s12, parameter_s21, parameter_s22, delta) = get_parameters_and_delta_from_matrix(total_S_matrix)
+
+            excel_ABCD_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency
+            excel_ABCD_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(parameter_a).strip('()')
+            excel_ABCD_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = str(parameter_b).strip('()')
+            excel_ABCD_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(parameter_c).strip('()')
+            excel_ABCD_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(parameter_d).strip('()')
+
+            excel_Z_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency
+            excel_Z_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(parameter_z11).strip('()')
+            excel_Z_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = str(parameter_z12).strip('()')
+            excel_Z_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(parameter_z21).strip('()')
+            excel_Z_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(parameter_z22).strip('()')
+
+            excel_Y_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency
+            excel_Y_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(parameter_y11).strip('()')
+            excel_Y_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = str(parameter_y12).strip('()')
+            excel_Y_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(parameter_y21).strip('()')
+            excel_Y_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(parameter_y22).strip('()')
+
+            excel_S_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency
+            excel_S_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(parameter_s11).strip('()')
+            excel_S_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = str(parameter_s12).strip('()')
+            excel_S_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(parameter_s21).strip('()')
+            excel_S_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(parameter_s22).strip('()')
+
             excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
 
             row_counter = row_counter + 1
+
+        plot_parameters_button.config(state='normal')
+        plot_parameters_in_format_combobox.config(state='normal')
+
+        messagebox.showinfo(title='Info', message='Parameters calculated')
     
     else:
         messagebox.showerror(title='Error', message='Empty parameters to calculate')
@@ -262,6 +296,7 @@ def get_frequency_with_prefixed(frequency_value: float):
 def convert_string_to_value(string_value):
     num_str = ''
     prefix_str = ''
+    _value = 0
 
     for character_value in string_value:
         if character_value.isdigit() or character_value == '.':
@@ -269,16 +304,18 @@ def convert_string_to_value(string_value):
         else:
             prefix_str = prefix_str + character_value
 
-    prefix_str = prefix_str[0]
+    if len(prefix_str) != 0:
+        prefix_str = prefix_str[0]
+        prefix_value = cfg.MAGNITUDES_PREFIXES_TO_VALUE[prefix_str]
+        num_value = float(num_str)
+        _value = num_value * prefix_value
 
-    prefix_value = cfg.MAGNITUDES_PREFIXES_TO_VALUE[prefix_str]
-    num_value = float(num_str)
+    else:
+        _value = float(string_value)
 
-    value = num_value * prefix_value
+    return _value
 
-    return value
-
-def join_value_and_prefix(value: str):
+def join_value_and_prefix(value: str, element_type: str):
     num_str = ''
     prefix_str = ''
 
@@ -287,10 +324,17 @@ def join_value_and_prefix(value: str):
             num_str = num_str + character_value
         else:
             if character_value != ' ':
+                if element_type == cfg.ELEMENT_TYPES[0] and character_value == 'm':
+                    character_value = character_value.title()
+
                 if character_value == 'f' or character_value == 'h' or character_value == 'k':
                     character_value = character_value.title()
 
+                if character_value == 'N' or character_value == 'P' or character_value == 'U':
+                    character_value = character_value.lower()
+
                 prefix_str = prefix_str + character_value
+
 
     value = num_str + prefix_str
 
