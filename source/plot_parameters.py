@@ -4,7 +4,6 @@ import skrf as rf
 from network_parameter_conversions import *
 
 def plot_magnitude_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d):
-
     parameter_a_db = [magnitude_in_db(A) for A in parameter_a]
     parameter_b_db = [magnitude_in_db(B) for B in parameter_b]
     parameter_c_db = [magnitude_in_db(C) for C in parameter_c]
@@ -37,7 +36,6 @@ def plot_magnitude_vs_frequency(frequencies, parameter_a, parameter_b, parameter
     plt.show()
 
 def plot_phase_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d):
-
     phase_a = [phase_in_degrees(x) for x in parameter_a]
     phase_b = [phase_in_degrees(x) for x in parameter_b]
     phase_c = [phase_in_degrees(x) for x in parameter_c]
@@ -71,7 +69,6 @@ def plot_phase_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, 
     plt.show()
 
 def plot_r_i_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d):
-
     real_a, imag_a = extract_real_imag(parameter_a)
     real_b, imag_b = extract_real_imag(parameter_b)
     real_c, imag_c = extract_real_imag(parameter_c)
@@ -113,7 +110,6 @@ def plot_r_i_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, pa
     plt.show()
 
 def plot_polar(parameter_a, parameter_b, parameter_c, parameter_d):
-    pass
     magnitude_a = np.abs(parameter_a)
     phase_a = np.angle(parameter_a, deg=True)
 
@@ -133,23 +129,22 @@ def plot_polar(parameter_a, parameter_b, parameter_c, parameter_d):
     axs[0, 0].set_title("Parameter A")
     axs[0, 0].grid(True)
 
-    axs[0, 1].plot(np.radians(phase_b), magnitude_b, label="Parameter B", color="green")
+    axs[0, 1].plot(np.radians(phase_b), magnitude_b, label="Parameter B", color="blue")
     axs[0, 1].set_title("Parameter B")
     axs[0, 1].grid(True)
 
-    axs[1, 0].plot(np.radians(phase_c), magnitude_c, label="Parameter C", color="red")
+    axs[1, 0].plot(np.radians(phase_c), magnitude_c, label="Parameter C", color="blue")
     axs[1, 0].set_title("Parameter C")
     axs[1, 0].grid(True)
 
-    axs[1, 1].plot(np.radians(phase_d), magnitude_d, label="Parameter D", color="purple")
+    axs[1, 1].plot(np.radians(phase_d), magnitude_d, label="Parameter D", color="blue")
     axs[1, 1].set_title("Parameter D")
     axs[1, 1].grid(True)
 
-    plt.tight_layout(rect=(0, 0, 1, 0.95))
+    # plt.tight_layout(rect=(0, 0, 1, 0.95))
     plt.show()
 
 def plot_smith_chart(parameter_a, parameter_b, parameter_c, parameter_d, z_0=50):
-
     s_parameters_a = []
     s_parameters_b = []
     s_parameters_c = []
@@ -195,7 +190,6 @@ def magnitude_in_db(parameter):
     return 20 * np.log10(np.abs(parameter))
 
 def phase_in_degrees(parameter):
-
     real_part = np.real(parameter)
     imag_part = np.imag(parameter)
     phase_radians = np.arctan2(imag_part, real_part)
@@ -206,4 +200,5 @@ def phase_in_degrees(parameter):
 def extract_real_imag(parameter):
     real_part = [np.real(x) for x in parameter]
     imag_part = [np.imag(x) for x in parameter]
+
     return real_part, imag_part

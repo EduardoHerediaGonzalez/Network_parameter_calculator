@@ -6,6 +6,7 @@ from tkinter import ttk
 
 import pandas as pd
 from openpyxl import *
+from pandas.io.sas.sas_constants import row_count_offset_multiplier
 
 from source.common_two_port_circuits import *
 from source.plot_parameters import *
@@ -24,6 +25,7 @@ sub_networks = list()
 sub_networks_interconnection = list()
 frequency_range = list()
 touchstone_file_counter = 0
+parameters_to_calculate = ''
 
 def add_touchstone_file():
     touchstone_file_path = touchstone_file_entry.get()
@@ -205,6 +207,8 @@ def save_frequency_parameters():
 def calculate_parameters():
     global sub_networks
     global sub_networks_interconnection
+    global parameters_to_calculate
+
     excel_ABCD_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_ABCD_PARAMETERS_SHEET]
     excel_Z_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_Z_PARAMETERS_SHEET]
     excel_Y_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_Y_PARAMETERS_SHEET]
@@ -269,23 +273,29 @@ def calculate_parameters():
         messagebox.showerror(title='Error', message='Empty parameters to calculate')
 
 def plot_parameters():
+    parameter_a = list()
+    parameter_b = list()
+    parameter_c = list()
+    parameter_d = list()
 
-    excel_abcd_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_ABCD_PARAMETERS_SHEET]
+    if parameters_to_calculate == cfg.NETWORK_PARAMETERS[0]:
+        excel_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_Z_PARAMETERS_SHEET]
 
-    frequencies = []
-    parameter_a = []
-    parameter_b = []
-    parameter_c = []
-    parameter_d = []
+    elif parameters_to_calculate == cfg.NETWORK_PARAMETERS[1]:
+        excel_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_Y_PARAMETERS_SHEET]
 
-    for row in range(cfg.EXCEL_INITIAL_ROW, excel_abcd_parameters_sheet.max_row):
+    elif parameters_to_calculate == cfg.NETWORK_PARAMETERS[2]:
+        excel_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_ABCD_PARAMETERS_SHEET]
 
-        frequencies.append(excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_A).value)
+    else:
+        excel_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_S_PARAMETERS_SHEET]
 
-        a = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_B).value
-        b = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_C).value
-        c = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_D).value
-        d = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_E).value
+    for row_counter in range(cfg.EXCEL_INITIAL_ROW, excel_parameters_sheet.max_row + 1):
+
+        a = excel_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value
+        b = excel_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value
+        c = excel_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value
+        d = excel_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value
 
         parameter_a.append(complex(a))
         parameter_b.append(complex(b))
@@ -294,20 +304,20 @@ def plot_parameters():
 
     format_to_plot = plot_parameters_in_format_combobox.get()
 
-    if format_to_plot == 'Rectangular (Magnitude vs Freq)':
-        plot_magnitude_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
+    if format_to_plot == cfg.PLOT_FORMATS[0]:
+        plot_magnitude_vs_frequency(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d)
 
-    elif format_to_plot == 'Rectangular (Phase vs Freq)':
-        plot_phase_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
+    elif format_to_plot == cfg.PLOT_FORMATS[1]:
+        plot_phase_vs_frequency(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d)
 
-    elif format_to_plot == 'Rectangular (RI vs Freq)':
-        plot_r_i_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
+    elif format_to_plot == cfg.PLOT_FORMATS[2]:
+        plot_r_i_vs_frequency(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d)
 
-    elif format_to_plot == 'Polar':
+    elif format_to_plot == cfg.PLOT_FORMATS[3]:
         plot_polar(parameter_a, parameter_b, parameter_c, parameter_d)
 
-    elif format_to_plot == 'Smith chart':
-        plot_smith_chart(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
+    elif format_to_plot == cfg.PLOT_FORMATS[4]:
+        plot_smith_chart(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d)
 
 def get_frequency_with_prefixed(frequency_value: float):
     frequency_value__length = len(str(int(frequency_value)))
