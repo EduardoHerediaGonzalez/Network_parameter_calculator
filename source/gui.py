@@ -9,7 +9,7 @@ from openpyxl import *
 
 from source.common_two_port_circuits import *
 from source.touchstone_files.touchstone import *
-from source.Plot_Parameters import *
+from source.network_parameter_conversions import *
 
 excel_base_template_workbook = load_workbook(filename=os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_BASE_TEMPLATE_FILE))
 excel_base_template_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
@@ -23,10 +23,6 @@ excel_circuit_counter_row = cfg.EXCEL_INITIAL_ROW_NETWORK_ID
 sub_networks = list()
 sub_networks_interconnection = list()
 frequency_range = list()
-cascade_sub_networks_indexes = list()
-series_sub_networks_indexes = list()
-parallel_sub_networks_indexes = list()
-touchstone_sub_networks_indexes = list()
 touchstone_file_counter = 0
 
 def add_touchstone_file():
@@ -205,8 +201,6 @@ def save_frequency_parameters():
         save_frequency_parameters_button.config(state='disable')
         calculate_parameters_button.config(state='normal')
         parameters_to_calculate_combobox.config(state='normal')
-        plot_parameters_in_format_combobox.config(state='normal') # ***************************
-        plot_parameters_button.config(state='normal') # **************************************+
 
 def calculate_parameters():
     global sub_networks
@@ -222,18 +216,17 @@ def calculate_parameters():
 
         get_sub_networks_info()
 
-        get_indexes_of_sub_networks_interconnection()
-
         row_counter = cfg.EXCEL_INITIAL_ROW
 
         for frequency in frequency_range:
-            abcd_parameters = get_total_abcd_matrix_parameters(frequency=frequency)
+            total_ABCD_matrix = get_total_ABCD_matrix(at_frequency=frequency)
+            (parameter_a, parameter_b , parameter_c, parameter_d, delta) = get_parameters_and_delta_from_matrix(total_ABCD_matrix)
 
             excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency
-            excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(abcd_parameters[cfg.PARAMETER_A_INDEX]).strip('()')
-            excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = str(abcd_parameters[cfg.PARAMETER_B_INDEX]).strip('()')
-            excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(abcd_parameters[cfg.PARAMETER_C_INDEX]).strip('()')
-            excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(abcd_parameters[cfg.PARAMETER_D_INDEX]).strip('()')
+            excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(parameter_a).strip('()')
+            excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = str(parameter_b).strip('()')
+            excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(parameter_c).strip('()')
+            excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(parameter_d).strip('()')
             excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
 
             row_counter = row_counter + 1
@@ -242,45 +235,7 @@ def calculate_parameters():
         messagebox.showerror(title='Error', message='Empty parameters to calculate')
 
 def plot_parameters():
-
-    excel_abcd_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_ABCD_PARAMETERS_SHEET]
-
-    frequencies = []
-    parameter_a = []
-    parameter_b = []
-    parameter_c = []
-    parameter_d = []
-
-    for row in range(cfg.EXCEL_INITIAL_ROW, excel_abcd_parameters_sheet.max_row):
-
-        frequencies.append(excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_A).value)
-
-        a = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_B).value
-        b = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_C).value
-        c = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_D).value
-        d = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_E).value
-
-        parameter_a.append(complex(a))
-        parameter_b.append(complex(b))
-        parameter_c.append(complex(c))
-        parameter_d.append(complex(d))
-
-    format_to_plot = plot_parameters_in_format_combobox.get()
-
-    if format_to_plot == 'Rectangular (Magnitude vs Freq)':
-        plot_magnitude_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
-
-    elif format_to_plot == 'Rectangular (Phase vs Freq)':
-        plot_phase_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
-
-    elif format_to_plot == 'Rectangular (RI vs Freq)':
-        plot_r_i_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
-
-    elif format_to_plot == 'Polar':
-        plot_polar(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
-
-    elif format_to_plot == 'Smith chart':
-        plot_smith_chart(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
+    pass
 
 def get_frequency_with_prefixed(frequency_value: float):
     frequency_value__length = len(str(int(frequency_value)))
@@ -396,72 +351,46 @@ def get_sub_networks_info():
 
     # return sub_networks, sub_networks_interconnection
 
-def get_total_abcd_matrix_parameters(frequency: float):
+def get_total_ABCD_matrix(at_frequency: float):
     global sub_networks
     global sub_networks_interconnection
 
-    abcd_parameters_matrix: list
-    sub_networks_abcd_matrices = list()
-    current_matrix_index = 0
-    total_abcd_matrix = complex(0,0)
+    total_ABCD_matrix = np.matrix([[1, 0],[0, 1]], dtype=complex)
+    total_Z_matrix = np.matrix([[0, 0],[0, 0]],dtype=complex)
+    total_Y_matrix = np.matrix([[0, 0], [0, 0]], dtype=complex)
+    _sub_network_ABCD_matrix = np.matrix([[0, 0], [0, 0]], dtype=complex)
+    sub_network_index = 0
     total_of_sub_networks = len(sub_networks)
-    total_of_cascade_interconnection = len(cascade_sub_networks_indexes)
-    total_of_series_interconnection = len(series_sub_networks_indexes)
-    total_of_parallel_interconnection = len(parallel_sub_networks_indexes)
-    total_of_touchstone_interconnection = len(touchstone_sub_networks_indexes)
-
-    #while len(sub_networks_abcd_matrices) < total_of_sub_networks:
-
-    for sub_network in sub_networks:
-        sub_networks_abcd_matrices.append(sub_network.get_matrix_abcd(at_frequency=frequency))
-
-    if total_of_sub_networks == 1:
-        total_abcd_matrix = sub_networks_abcd_matrices[current_matrix_index]
-    
-    else:
-        if total_of_sub_networks == total_of_cascade_interconnection:
-            total_abcd_matrix = sub_networks_abcd_matrices[current_matrix_index]
-            current_matrix_index = current_matrix_index + 1
-
-            while current_matrix_index < total_of_sub_networks:
-                total_abcd_matrix = total_abcd_matrix * sub_networks_abcd_matrices[current_matrix_index]
-                current_matrix_index = current_matrix_index + 1
-        else:
-            pass
-
-    total_abcd_matrix = total_abcd_matrix.tolist()
-    matrix_row_1 = total_abcd_matrix[0]
-    matrix_row_2 = total_abcd_matrix[1]
-    parameter_a, parameter_b = matrix_row_1
-    parameter_c, parameter_d = matrix_row_2
-
-    parameter_a = parameter_a
-    parameter_b = parameter_b
-    parameter_c = parameter_c
-    parameter_d = parameter_d
-
-    abcd_parameters_matrix = [parameter_a, parameter_b, parameter_c, parameter_d]
-
-    sub_networks_abcd_matrices.clear()
-
-    return abcd_parameters_matrix
-
-def get_indexes_of_sub_networks_interconnection():
-    global sub_networks_interconnection
-
-    index_counter = 0
 
     for sub_network_interconnection in sub_networks_interconnection:
-        if sub_network_interconnection == 'Series connection':
-            series_sub_networks_indexes.append(index_counter)
-        elif sub_network_interconnection == 'Parallel connection':
-            parallel_sub_networks_indexes.append(index_counter)
-        elif sub_network_interconnection == 'Cascade connection':
-            cascade_sub_networks_indexes.append(index_counter)
-        else:
-            touchstone_sub_networks_indexes.append(index_counter)
+        _sub_network_ABCD_matrix = sub_networks[sub_network_index].get_ABCD_matrix(at_frequency=at_frequency)
 
-        index_counter = index_counter + 1
+        if sub_network_interconnection == cfg.SUB_NETWORK_DEFAULT_CONNECTION:
+            total_ABCD_matrix = total_ABCD_matrix * _sub_network_ABCD_matrix
+
+        elif sub_network_interconnection == cfg.INTERCONNECTION_TYPES[cfg.SERIES_CONNECTION_INDEX]:
+            total_Z_matrix = total_Z_matrix + convert_ABCD_matrix_to_Z_matrix(_sub_network_ABCD_matrix)
+
+            if sub_network_index < (total_of_sub_networks - 1):
+                if sub_networks_interconnection[sub_network_index + 1] != cfg.INTERCONNECTION_TYPES[cfg.SERIES_CONNECTION_INDEX]:
+                    total_ABCD_matrix = total_ABCD_matrix * convert_Z_matrix_to_ABCD_matrix(total_Z_matrix)
+
+            else:
+                total_ABCD_matrix = total_ABCD_matrix * convert_Z_matrix_to_ABCD_matrix(total_Z_matrix)
+
+        elif sub_network_interconnection == cfg.INTERCONNECTION_TYPES[cfg.PARALLEL_CONNECTION_INDEX]:
+            total_Y_matrix = total_Y_matrix + convert_ABCD_matrix_to_Y_matrix(_sub_network_ABCD_matrix)
+
+            if sub_network_index < (total_of_sub_networks - 1):
+                if sub_networks_interconnection[sub_network_index + 1] != cfg.INTERCONNECTION_TYPES[cfg.PARALLEL_CONNECTION_INDEX]:
+                    total_ABCD_matrix = total_ABCD_matrix * convert_Y_matrix_to_ABCD_matrix(total_Y_matrix)
+
+            else:
+                total_ABCD_matrix = total_ABCD_matrix * convert_Y_matrix_to_ABCD_matrix(total_Y_matrix)
+
+        sub_network_index = sub_network_index + 1
+
+    return total_ABCD_matrix
 
 mainWindow = tk.Tk()
 mainWindow.title("Two-port network parameter calculator")
@@ -589,27 +518,27 @@ row = row + 1
 
 start_frequency_label = ttk.Label(frame_2, text = 'Start frequency')
 start_frequency_label.grid(row=row, column=0)
-start_frequency_entry = ttk.Entry(frame_2, state='normal', textvariable=reset_start_frequency_entry)
+start_frequency_entry = ttk.Entry(frame_2, state='disable', textvariable=reset_start_frequency_entry)
 start_frequency_entry.grid(row=row, column=1)
-start_frequency_combobox = ttk.Combobox(frame_2, state='normal', values = cfg.FREQUENCY_PREFIXES)
+start_frequency_combobox = ttk.Combobox(frame_2, state='disable', values = cfg.FREQUENCY_PREFIXES)
 start_frequency_combobox.grid(row=row, column=2)
 
 row = row + 1
 
 end_frequency_label = ttk.Label(frame_2, text='End frequency')
 end_frequency_label.grid(row=row, column=0)
-end_frequency_entry = ttk.Entry(frame_2, state='normal', textvariable=reset_end_frequency_entry)
+end_frequency_entry = ttk.Entry(frame_2, state='disable', textvariable=reset_end_frequency_entry)
 end_frequency_entry.grid(row=row, column=1)
-end_frequency_combobox = ttk.Combobox(frame_2, state='normal', values=cfg.FREQUENCY_PREFIXES)
+end_frequency_combobox = ttk.Combobox(frame_2, state='disable', values=cfg.FREQUENCY_PREFIXES)
 end_frequency_combobox.grid(row=row, column=2)
 
 row = row + 1
 
 analysis_frequency_step_label = ttk.Label(frame_2, text='Analysis frequency step')
 analysis_frequency_step_label.grid(row=row, column=0)
-analysis_frequency_step_entry = ttk.Entry(frame_2, state='normal', textvariable=reset_analysis_frequency_step_entry)
+analysis_frequency_step_entry = ttk.Entry(frame_2, state='disable', textvariable=reset_analysis_frequency_step_entry)
 analysis_frequency_step_entry.grid(row=row, column=1)
-analysis_frequency_step_combobox = ttk.Combobox(frame_2, state='normal', values = cfg.FREQUENCY_PREFIXES)
+analysis_frequency_step_combobox = ttk.Combobox(frame_2, state='disable', values = cfg.FREQUENCY_PREFIXES)
 analysis_frequency_step_combobox.grid(row=row, column=2)
 
 row = row + 1
@@ -618,7 +547,7 @@ spacer_5.grid(row=row, column=0)
 
 row = row + 1
 
-save_frequency_parameters_button = ttk.Button(frame_2, text='Save frequency parameters', state='normal', command=save_frequency_parameters)
+save_frequency_parameters_button = ttk.Button(frame_2, text='Save frequency parameters', state='disable', command=save_frequency_parameters)
 save_frequency_parameters_button.grid(row=row, column=0)
 
 row = row + 1
