@@ -6,11 +6,11 @@ from tkinter import ttk
 
 import pandas as pd
 from openpyxl import *
-from pandas.io.sas.sas_constants import row_count_offset_multiplier
 
 from source.common_two_port_circuits import *
 from source.plot_parameters import *
 from source.touchstone_files.touchstone import *
+from source.excel_sheet_format import *
 
 excel_base_template_workbook = load_workbook(filename=os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_BASE_TEMPLATE_FILE))
 excel_base_template_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
@@ -96,7 +96,7 @@ def add_sub_network():
 
 
     if type_of_circuit == '':
-        messagebox.showerror(title='Error', message='Type of circuit is empty')
+        messagebox.showerror(title='Error', message='No type of circuit selected')
 
     elif element_a == '' and element_b == '' and element_c == '':
         messagebox.showerror(title='Error', message='No element selected')
@@ -193,6 +193,14 @@ def save_frequency_parameters():
         excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW, column=cfg.EXCEL_COLUMN_B).value = start_frequency + ' ' + start_frequency_prefix
         excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 1, column=cfg.EXCEL_COLUMN_B).value = end_frequency + ' ' + end_frequency_prefix
         excel_network_info_sheet.cell(row =cfg.EXCEL_INITIAL_ROW + 2, column = cfg.EXCEL_COLUMN_B).value = analysis_frequency_step + ' ' + analysis_frequency_step_prefix
+
+        start_cell = cfg.EXCEL_COLUMN_VALUE_TO_LETTER[cfg.EXCEL_COLUMN_A] + str(cfg.EXCEL_INITIAL_ROW_NETWORK_ID)
+        end_cell = cfg.EXCEL_COLUMN_VALUE_TO_LETTER[cfg.EXCEL_COLUMN_L] + str(excel_network_info_sheet.max_row)
+
+        apply_border_to_excel_sheet(start_cell=start_cell, end_cell=end_cell, to_sheet=excel_network_info_sheet)
+        apply_cell_text_alignment(start_cell=start_cell, end_cell=end_cell, type_of_alignment='center', to_sheet=excel_network_info_sheet)
+        adjust_columns_width_of_excel_sheet(columns=['C', 'E', 'G', 'I'], columns_width=[20, 10, 10, 10], to_sheet=excel_network_info_sheet)
+
         excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
 
         start_frequency_entry.config(state='disable')
@@ -260,9 +268,31 @@ def calculate_parameters():
             excel_S_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(parameter_s21).strip('()')
             excel_S_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(parameter_s22).strip('()')
 
-            excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
+            # excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
 
             row_counter = row_counter + 1
+
+        star_cell = cfg.EXCEL_COLUMN_VALUE_TO_LETTER[cfg.EXCEL_COLUMN_A] + str(cfg.EXCEL_INITIAL_ROW)
+        end_cell = cfg.EXCEL_COLUMN_VALUE_TO_LETTER[cfg.EXCEL_COLUMN_E] + str(excel_ABCD_parameters_sheet.max_row)
+        column_width = 50
+
+        apply_border_to_excel_sheet(start_cell=star_cell, end_cell=end_cell, to_sheet=excel_ABCD_parameters_sheet)
+        apply_cell_text_alignment(start_cell=star_cell, end_cell=end_cell, type_of_alignment='center', to_sheet=excel_ABCD_parameters_sheet)
+        adjust_columns_width_of_excel_sheet(columns=['B', 'C', 'D', 'E'], columns_width=[column_width, column_width, column_width, column_width], to_sheet=excel_ABCD_parameters_sheet)
+
+        apply_border_to_excel_sheet(start_cell=star_cell, end_cell=end_cell, to_sheet=excel_Z_parameters_sheet)
+        apply_cell_text_alignment(start_cell=star_cell, end_cell=end_cell, type_of_alignment='center', to_sheet=excel_Z_parameters_sheet)
+        adjust_columns_width_of_excel_sheet(columns=['B', 'C', 'D', 'E'], columns_width=[column_width, column_width, column_width, column_width], to_sheet=excel_Z_parameters_sheet)
+
+        apply_border_to_excel_sheet(start_cell=star_cell, end_cell=end_cell, to_sheet=excel_Y_parameters_sheet)
+        apply_cell_text_alignment(start_cell=star_cell, end_cell=end_cell, type_of_alignment='center', to_sheet=excel_Y_parameters_sheet)
+        adjust_columns_width_of_excel_sheet(columns=['B', 'C', 'D', 'E'], columns_width=[column_width, column_width, column_width, column_width], to_sheet=excel_Y_parameters_sheet)
+
+        apply_border_to_excel_sheet(start_cell=star_cell, end_cell=end_cell, to_sheet=excel_S_parameters_sheet)
+        apply_cell_text_alignment(start_cell=star_cell, end_cell=end_cell, type_of_alignment='center', to_sheet=excel_S_parameters_sheet)
+        adjust_columns_width_of_excel_sheet(columns=['B', 'C', 'D', 'E'], columns_width=[column_width, column_width, column_width, column_width], to_sheet=excel_S_parameters_sheet)
+
+        excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
 
         plot_parameters_button.config(state='normal')
         plot_parameters_in_format_combobox.config(state='normal')
@@ -318,6 +348,9 @@ def plot_parameters():
 
     elif format_to_plot == cfg.PLOT_FORMATS[4]:
         plot_smith_chart(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d)
+
+def download_calculated_parameters_file():
+    pass
 
 def get_frequency_with_prefixed(frequency_value: float):
     frequency_value__length = len(str(int(frequency_value)))
@@ -486,7 +519,7 @@ def get_total_ABCD_matrix(at_frequency: float):
 
 mainWindow = tk.Tk()
 mainWindow.title("Two-port network parameter calculator")
-mainWindow.geometry('800x600')
+mainWindow.geometry('720x550')
 
 counter_of_sub_networks = tk.IntVar(mainWindow, 0)
 reset_type_of_circuit_combobox = tk.StringVar(mainWindow, '')
@@ -605,6 +638,7 @@ frame_2.grid(row=row, column=0)
 
 spacer_5 = ttk.Label(frame_2)
 spacer_6 = ttk.Label(frame_2)
+spacer_7 = ttk.Label(frame_2)
 
 row = row + 1
 
@@ -659,5 +693,16 @@ plot_parameters_button = ttk.Button(frame_2, text='Plot parameters', state='disa
 plot_parameters_button.grid(row=row, column=0)
 plot_parameters_in_format_combobox = ttk.Combobox(frame_2, values=cfg.PLOT_FORMATS, state='disable')
 plot_parameters_in_format_combobox.grid(row=row, column=1)
+
+row = row + 1
+
+spacer_7.grid(row=row, column=0)
+
+row = row + 1
+
+download_calculated_parameters_file = ttk.Button(frame_2, state='disable', text='Download calculated parameters file', command=download_calculated_parameters_file)
+download_calculated_parameters_file.grid(row=row, column=0)
+calculate_parameters_entry = ttk.Entry(frame_2, state='disable')
+calculate_parameters_entry.grid(row=row, column=1)
 
 mainWindow.mainloop()
