@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from network_parameter_conversions import convert_abcd_parameters_to_s_parameters
+from source.network_parameter_conversions import convert_ABCD_matrix_to_S_matrix
 import skrf as rf
 
  # **************************** Por ahora asumiendo que se calculan paráMetros ABCD ************************************
@@ -160,7 +160,7 @@ def plot_smith_chart(frequencies, parameter_a, parameter_b, parameter_c, paramet
 
     for a, b, c, d in zip(parameter_a, parameter_b, parameter_c, parameter_d):
         matrix_abcd = np.matrix([[a, b], [c, d]])
-        s_matrix = convert_abcd_parameters_to_s_parameters(matrix_abcd, z_0)
+        s_matrix = convert_ABCD_matrix_to_S_matrix(matrix_abcd, z_0)
 
         s_parameters_a.append(s_matrix[0, 0])  # S11
         s_parameters_b.append(s_matrix[0, 1])  # S12
