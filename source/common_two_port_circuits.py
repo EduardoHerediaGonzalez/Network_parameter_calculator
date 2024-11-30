@@ -198,7 +198,6 @@ class PiCircuit:
 
         return self.__matrix_abcd
 
-
 # Definition of the class that represents the Open Stub circuit of a two-port network
 class StubOpenCircuit:
     # Private class attributes
@@ -218,7 +217,7 @@ class StubOpenCircuit:
         self.__impedance_b = Impedance(type_of_element=type_of_element_b, with_value=element_b_value)
 
     def __get_parameter_c(self, at_frequency):
-        impedance_z_a = -1 / (np.tan(self.__impedance_a.get_impedance(at_frequency=at_frequency)))
+        impedance_z_a = (-1 / (np.tan(self.__impedance_a.get_impedance(at_frequency=at_frequency)))) * complex(0,1)
         #print(impedance_z_a) ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         impedance_z_b = self.__impedance_b.get_impedance(at_frequency=at_frequency)
         #print(impedance_z_b) ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -262,7 +261,7 @@ class StubShortCircuitedCircuit:
         self.__impedance_b = Impedance(type_of_element=type_of_element_b, with_value=element_b_value)
 
     def __get_parameter_c(self, at_frequency):
-        impedance_z_a = np.tan(self.__impedance_a.get_impedance(at_frequency=at_frequency))
+        impedance_z_a = (np.tan(self.__impedance_a.get_impedance(at_frequency=at_frequency))) * complex(0,1)
         #print(impedance_z_a) ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         impedance_z_b = self.__impedance_b.get_impedance(at_frequency=at_frequency)
         #print(impedance_z_b) ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -287,7 +286,7 @@ class StubShortCircuitedCircuit:
 
         return self.__matrix_abcd
 
-
+# Definition of the class that represents the Transmission Line circuit of a two-port network
 class TransmissionLineCircuit:
     # Private class attributes
     __parameter_a: complex
@@ -310,7 +309,7 @@ class TransmissionLineCircuit:
     def __get_parameter_a(self, at_frequency):
         impedance_z_a = self.__impedance_a.get_impedance(at_frequency=at_frequency)
 
-        self.__parameter_a = np.cos(impedance_z_a * complex(0, -1))
+        self.__parameter_a = np.cos(impedance_z_a)
 
         return self.__parameter_a
 
@@ -318,7 +317,7 @@ class TransmissionLineCircuit:
         impedance_z_a = self.__impedance_a.get_impedance(at_frequency=at_frequency)
         impedance_z_b = self.__impedance_b.get_impedance(at_frequency=at_frequency)
 
-        self.__parameter_b = impedance_z_b * np.sin(impedance_z_a)
+        self.__parameter_b = impedance_z_b * np.sin(impedance_z_a) * complex(0,1)
 
         return self.__parameter_b
 
@@ -326,14 +325,14 @@ class TransmissionLineCircuit:
         impedance_z_a = self.__impedance_a.get_impedance(at_frequency=at_frequency)
         impedance_z_b = self.__impedance_b.get_impedance(at_frequency=at_frequency)
 
-        self.__parameter_c = (np.sin(impedance_z_a)) / impedance_z_b
+        self.__parameter_c = (np.sin(impedance_z_a) * complex(0,1)) / impedance_z_b
 
         return self.__parameter_c
 
     def __get_parameter_d(self, at_frequency):
         impedance_z_a = self.__impedance_a.get_impedance(at_frequency=at_frequency)
 
-        self.__parameter_d = np.cos(impedance_z_a * complex(0, -1))
+        self.__parameter_d = np.cos(impedance_z_a)
 
         return self.__parameter_d
 

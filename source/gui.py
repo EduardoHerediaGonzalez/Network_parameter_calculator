@@ -238,7 +238,6 @@ def calculate_parameters():
         messagebox.showerror(title='Error', message='Empty parameters to calculate')
 
 def plot_parameters():
-
     excel_abcd_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_ABCD_PARAMETERS_SHEET]
 
     frequencies = []
@@ -255,6 +254,15 @@ def plot_parameters():
         b = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_C).value
         c = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_D).value
         d = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_E).value
+
+        if a is None:
+            a = 0 + 0j
+        if b is None:
+            b = 0 + 0j
+        if c is None:
+            c = 0 + 0j
+        if d is None:
+            d = 0 + 0j
 
         parameter_a.append(complex(a))
         parameter_b.append(complex(b))
@@ -393,6 +401,7 @@ def get_sub_networks_info():
             element_a_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_E).value
             element_b = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_F).value
             element_b_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_G).value
+
             sub_network = StubOpenCircuit(type_of_element_a=element_a, element_a_value=convert_string_to_value(element_a_value),
                                    type_of_element_b=element_b, element_b_value=convert_string_to_value(element_b_value))
             sub_networks.append(sub_network)
@@ -402,6 +411,7 @@ def get_sub_networks_info():
             element_a_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_E).value
             element_b = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_F).value
             element_b_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_G).value
+
             sub_network = StubShortCircuitedCircuit(type_of_element_a=element_a, element_a_value=convert_string_to_value(element_a_value),
                                    type_of_element_b=element_b, element_b_value=convert_string_to_value(element_b_value))
             sub_networks.append(sub_network)
@@ -411,6 +421,7 @@ def get_sub_networks_info():
             element_a_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_E).value
             element_b = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_F).value
             element_b_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_G).value
+
             sub_network = TransmissionLineCircuit(type_of_element_a=element_a, element_a_value=convert_string_to_value(element_a_value),
                                    type_of_element_b=element_b, element_b_value=convert_string_to_value(element_b_value))
             sub_networks.append(sub_network)
