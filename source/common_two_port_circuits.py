@@ -197,3 +197,163 @@ class PiCircuit:
             dtype=complex)
 
         return self.__matrix_abcd
+
+
+# Definition of the class that represents the Open Stub circuit of a two-port network
+class StubOpenCircuit:
+    # Private class attributes
+    __parameter_a = 1
+    __parameter_b = 0
+    __parameter_c = complex
+    __parameter_d = 1
+    __delta_abcd: complex
+    __matrix_abcd: matrix
+    __impedance_a: Impedance
+    __impedance_b: Impedance
+
+    # Class constructors
+    def __init__(self, type_of_element_a : str = '', element_a_value : float = 0,
+                 type_of_element_b : str = '', element_b_value : float = 0):
+        self.__impedance_a = Impedance(type_of_element=type_of_element_a, with_value=element_a_value)
+        self.__impedance_b = Impedance(type_of_element=type_of_element_b, with_value=element_b_value)
+
+    def __get_parameter_c(self, at_frequency):
+        impedance_z_a = -1 / (np.tan(self.__impedance_a.get_impedance(at_frequency=at_frequency)))
+        #print(impedance_z_a) ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        impedance_z_b = self.__impedance_b.get_impedance(at_frequency=at_frequency)
+        #print(impedance_z_b) ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        self.__parameter_c = 1 / (impedance_z_a * impedance_z_b)
+        #print(self.__parameter_c)  ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        return self.__parameter_c
+
+    # Public class methods
+    def get_delta_abcd(self, at_frequency):
+
+        parameter_c = self.__get_parameter_c(at_frequency=at_frequency)
+
+        self.__delta_abcd = (self.__parameter_a * self.__parameter_d) - (parameter_c * self.__parameter_c)
+
+        return  int(self.__delta_abcd.real)
+
+    def get_ABCD_matrix(self, at_frequency):
+
+        parameter_c = self.__get_parameter_c(at_frequency=at_frequency)
+
+        self.__matrix_abcd = np.matrix([[self.__parameter_a, self.__parameter_b], [parameter_c, self.__parameter_d]])
+
+        return self.__matrix_abcd
+
+# Definition of the class that represents the ShortCircuited circuit of a two-port network
+class StubShortCircuitedCircuit:
+    # Private class attributes
+    __parameter_a = 1
+    __parameter_b = 0
+    __parameter_c = complex
+    __parameter_d = 1
+    __delta_abcd: complex
+    __matrix_abcd: matrix
+    __impedance_a: Impedance
+    __impedance_b: Impedance
+
+    # Class constructors
+    def __init__(self, type_of_element_a : str = '', element_a_value : float = 0,
+                 type_of_element_b : str = '', element_b_value : float = 0):
+        self.__impedance_a = Impedance(type_of_element=type_of_element_a, with_value=element_a_value)
+        self.__impedance_b = Impedance(type_of_element=type_of_element_b, with_value=element_b_value)
+
+    def __get_parameter_c(self, at_frequency):
+        impedance_z_a = np.tan(self.__impedance_a.get_impedance(at_frequency=at_frequency))
+        #print(impedance_z_a) ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        impedance_z_b = self.__impedance_b.get_impedance(at_frequency=at_frequency)
+        #print(impedance_z_b) ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        self.__parameter_c = 1 / (impedance_z_a * impedance_z_b)
+        #print(self.__parameter_c)  ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        return self.__parameter_c
+
+    # Public class methods
+    def get_delta_abcd(self, at_frequency):
+
+        parameter_c = self.__get_parameter_c(at_frequency=at_frequency)
+
+        self.__delta_abcd = (self.__parameter_a * self.__parameter_d) - (parameter_c * self.__parameter_c)
+
+        return  int(self.__delta_abcd.real)
+
+    def get_ABCD_matrix(self, at_frequency):
+
+        parameter_c = self.__get_parameter_c(at_frequency=at_frequency)
+
+        self.__matrix_abcd = np.matrix([[self.__parameter_a, self.__parameter_b], [parameter_c, self.__parameter_d]])
+
+        return self.__matrix_abcd
+
+
+class TransmissionLineCircuit:
+    # Private class attributes
+    __parameter_a: complex
+    __parameter_b: complex
+    __parameter_c: complex
+    __parameter_d: complex
+    __delta_abcd: complex
+    __matrix_abcd: matrix
+    __impedance_a: Impedance
+    __impedance_b: Impedance
+    __impedance_c: Impedance
+
+    # Class constructors
+    def __init__(self, type_of_element_a : str = '', element_a_value : float = 0,
+                 type_of_element_b : str = '', element_b_value : float = 0):
+        self.__impedance_a = Impedance(type_of_element=type_of_element_a, with_value=element_a_value)
+        self.__impedance_b = Impedance(type_of_element=type_of_element_b, with_value=element_b_value)
+
+    # Private class methods
+    def __get_parameter_a(self, at_frequency):
+        impedance_z_a = self.__impedance_a.get_impedance(at_frequency=at_frequency)
+
+        self.__parameter_a = np.cos(impedance_z_a * complex(0, -1))
+
+        return self.__parameter_a
+
+    def __get_parameter_b(self, at_frequency):
+        impedance_z_a = self.__impedance_a.get_impedance(at_frequency=at_frequency)
+        impedance_z_b = self.__impedance_b.get_impedance(at_frequency=at_frequency)
+
+        self.__parameter_b = impedance_z_b * np.sin(impedance_z_a)
+
+        return self.__parameter_b
+
+    def __get_parameter_c(self, at_frequency):
+        impedance_z_a = self.__impedance_a.get_impedance(at_frequency=at_frequency)
+        impedance_z_b = self.__impedance_b.get_impedance(at_frequency=at_frequency)
+
+        self.__parameter_c = (np.sin(impedance_z_a)) / impedance_z_b
+
+        return self.__parameter_c
+
+    def __get_parameter_d(self, at_frequency):
+        impedance_z_a = self.__impedance_a.get_impedance(at_frequency=at_frequency)
+
+        self.__parameter_d = np.cos(impedance_z_a * complex(0, -1))
+
+        return self.__parameter_d
+
+    # Public class methods
+    def get_delta_abcd(self, at_frequency):
+        parameter_a = self.__get_parameter_a(at_frequency=at_frequency)
+        parameter_b = self.__get_parameter_b(at_frequency=at_frequency)
+        parameter_c = self.__get_parameter_c(at_frequency=at_frequency)
+        parameter_d = self.__get_parameter_d(at_frequency=at_frequency)
+
+        self.__delta_abcd = (parameter_a * parameter_d) - (parameter_b * parameter_c)
+
+        return  self.__delta_abcd
+
+    def get_ABCD_matrix(self, at_frequency):
+        parameter_a = self.__get_parameter_a(at_frequency=at_frequency)
+        parameter_b = self.__get_parameter_b(at_frequency=at_frequency)
+        parameter_c = self.__get_parameter_c(at_frequency=at_frequency)
+        parameter_d = self.__get_parameter_d(at_frequency=at_frequency)
+
+        self.__matrix_abcd = np.matrix([[parameter_a, parameter_b],[parameter_c, parameter_d]])
+
+        return self.__matrix_abcd

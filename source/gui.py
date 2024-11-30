@@ -10,6 +10,7 @@ from openpyxl import *
 from source.common_two_port_circuits import *
 from source.touchstone_files.touchstone import *
 from source.network_parameter_conversions import *
+from source.Plot_Parameters import *
 
 excel_base_template_workbook = load_workbook(filename=os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_BASE_TEMPLATE_FILE))
 excel_base_template_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
@@ -201,6 +202,8 @@ def save_frequency_parameters():
         save_frequency_parameters_button.config(state='disable')
         calculate_parameters_button.config(state='normal')
         parameters_to_calculate_combobox.config(state='normal')
+        plot_parameters_in_format_combobox.config(state='normal') # ***************************
+        plot_parameters_button.config(state='normal') # **************************************+
 
 def calculate_parameters():
     global sub_networks
@@ -235,7 +238,45 @@ def calculate_parameters():
         messagebox.showerror(title='Error', message='Empty parameters to calculate')
 
 def plot_parameters():
-    pass
+
+    excel_abcd_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_ABCD_PARAMETERS_SHEET]
+
+    frequencies = []
+    parameter_a = []
+    parameter_b = []
+    parameter_c = []
+    parameter_d = []
+
+    for row in range(cfg.EXCEL_INITIAL_ROW, excel_abcd_parameters_sheet.max_row):
+
+        frequencies.append(excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_A).value)
+
+        a = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_B).value
+        b = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_C).value
+        c = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_D).value
+        d = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_E).value
+
+        parameter_a.append(complex(a))
+        parameter_b.append(complex(b))
+        parameter_c.append(complex(c))
+        parameter_d.append(complex(d))
+
+    format_to_plot = plot_parameters_in_format_combobox.get()
+
+    if format_to_plot == 'Rectangular (Magnitude vs Freq)':
+        plot_magnitude_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
+
+    elif format_to_plot == 'Rectangular (Phase vs Freq)':
+        plot_phase_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
+
+    elif format_to_plot == 'Rectangular (RI vs Freq)':
+        plot_r_i_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
+
+    elif format_to_plot == 'Polar':
+        plot_polar(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
+
+    elif format_to_plot == 'Smith chart':
+        plot_smith_chart(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
 
 def get_frequency_with_prefixed(frequency_value: float):
     frequency_value__length = len(str(int(frequency_value)))
@@ -347,8 +388,34 @@ def get_sub_networks_info():
                                    type_of_element_c=element_c, element_c_value=convert_string_to_value(element_c_value))
             sub_networks.append(sub_network)
 
-        sub_network_id_counter = sub_network_id_counter + 1
+        elif circuit_type == 'Open Stub':
+            element_a = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_D).value
+            element_a_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_E).value
+            element_b = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_F).value
+            element_b_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_G).value
+            sub_network = StubOpenCircuit(type_of_element_a=element_a, element_a_value=convert_string_to_value(element_a_value),
+                                   type_of_element_b=element_b, element_b_value=convert_string_to_value(element_b_value))
+            sub_networks.append(sub_network)
 
+        elif circuit_type == 'ShortCircuit Stub':
+            element_a = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_D).value
+            element_a_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_E).value
+            element_b = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_F).value
+            element_b_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_G).value
+            sub_network = StubShortCircuitedCircuit(type_of_element_a=element_a, element_a_value=convert_string_to_value(element_a_value),
+                                   type_of_element_b=element_b, element_b_value=convert_string_to_value(element_b_value))
+            sub_networks.append(sub_network)
+
+        elif circuit_type == 'Transmission line':
+            element_a = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_D).value
+            element_a_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_E).value
+            element_b = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_F).value
+            element_b_value = excel_network_info_sheet.cell(row=sub_network_id_counter, column=cfg.EXCEL_COLUMN_G).value
+            sub_network = TransmissionLineCircuit(type_of_element_a=element_a, element_a_value=convert_string_to_value(element_a_value),
+                                   type_of_element_b=element_b, element_b_value=convert_string_to_value(element_b_value))
+            sub_networks.append(sub_network)
+
+        sub_network_id_counter = sub_network_id_counter + 1
     # return sub_networks, sub_networks_interconnection
 
 def get_total_ABCD_matrix(at_frequency: float):

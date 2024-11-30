@@ -1,5 +1,5 @@
 DEFAULT_NETWORK_TYPE = 'Two-port'
-CIRCUIT_TYPES = ['Series impedance', 'Shunt impedance', 'T', 'Pi', 'Transmission line']
+CIRCUIT_TYPES = ['Series impedance', 'Shunt impedance', 'T', 'Pi', 'Transmission line', 'Open Stub', 'ShortCircuit Stub']
 INTERCONNECTION_TYPES = ['Series connection', 'Parallel connection']
 SUB_NETWORK_DEFAULT_CONNECTION = 'Cascade connection'
 TOUCHSTONE_CONNECTION = 'Touchstone connection'

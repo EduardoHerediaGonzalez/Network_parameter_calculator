@@ -119,6 +119,13 @@ class Impedance:
             self.__resistance = float(0)
             self.__reactance = Inductor(inductance=self.__element_value).get_reactance(at_frequency=at_frequency)
 
+        elif self.__type_of_element == 'Transmission line length (l)':
+            self.__resistance = float(0)
+            self.__reactance = PhaseConstant(length=self.__element_value).get_reactance(at_frequency=at_frequency)
+
+        elif self.__type_of_element == 'Characteristic impedance (Zo)':
+            self.__resistance = CharacteristicImpedance(characteristic_impedance=self.__element_value).get_characteristic_impedance()
+            self.__reactance = float(0)
         else:
             self.__impedance = complex(0,0)
 
@@ -162,3 +169,40 @@ class Admittance:
         self.__admittance = complex(self.__conductance, self.__susceptance)
 
         return self.__admittance
+
+
+# Definition of the class that represent an Open circuit Beta*length.
+class PhaseConstant:
+    # Private class attributes
+    __length: float = 0
+    __reactance: float = 0
+
+    def __init__(self, length: float = 0):
+        self.__length = length
+
+    # Public class methods
+    def set_length(self, to_value: float):
+        self.__length = to_value
+
+    def get_length(self):
+        return self.__length
+
+    def get_reactance(self, at_frequency: float):
+        self.__reactance = (2 * np.pi * at_frequency * self.__length) / 2.998e8
+        print(self.__reactance)
+        return self.__reactance
+
+
+class CharacteristicImpedance:
+    # Private class attributes
+    __characteristic_impedance: float = 0
+
+    # Class constructors
+    def __init__(self, characteristic_impedance: float = 0):
+        self.__characteristic_impedance = characteristic_impedance
+    # Public class methods
+    def set_characteristic_impedance(self, to_value: float):
+        self.__characteristic_impedance = to_value
+
+    def get_characteristic_impedance(self):
+        return self.__characteristic_impedance
