@@ -208,7 +208,6 @@ def save_frequency_parameters():
 def calculate_parameters():
     global sub_networks
     global sub_networks_interconnection
-    excel_abcd_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_ABCD_PARAMETERS_SHEET]
 
     parameters_to_calculate = parameters_to_calculate_combobox.get()
 
@@ -221,70 +220,120 @@ def calculate_parameters():
 
         row_counter = cfg.EXCEL_INITIAL_ROW
 
-        for frequency in frequency_range:
-            total_ABCD_matrix = get_total_ABCD_matrix(at_frequency=frequency)
-            (parameter_a, parameter_b , parameter_c, parameter_d, delta) = get_parameters_and_delta_from_matrix(total_ABCD_matrix)
+        if parameters_to_calculate == 'ABCD':
+            for frequency in frequency_range:
+                excel_abcd_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_ABCD_PARAMETERS_SHEET]
 
-            excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency
-            excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(parameter_a).strip('()')
-            excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = str(parameter_b).strip('()')
-            excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(parameter_c).strip('()')
-            excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(parameter_d).strip('()')
-            excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
+                total_ABCD_matrix = get_total_ABCD_matrix(at_frequency=frequency)
+                (parameter_a, parameter_b , parameter_c, parameter_d, delta) = get_parameters_and_delta_from_matrix(total_ABCD_matrix)
 
-            row_counter = row_counter + 1
-    
+                excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency
+                excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(parameter_a).strip('()')
+                excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = str(parameter_b).strip('()')
+                excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(parameter_c).strip('()')
+                excel_abcd_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(parameter_d).strip('()')
+                excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
+
+                row_counter = row_counter + 1
+
+        elif parameters_to_calculate == 'Z':
+            for frequency in frequency_range:
+                excel_z_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_Z_PARAMETERS_SHEET]
+
+                total_ABCD_matrix = get_total_ABCD_matrix(at_frequency=frequency)
+                total_Z_matrix = convert_ABCD_matrix_to_Z_matrix(total_ABCD_matrix)
+                (parameter_a, parameter_b , parameter_c, parameter_d, delta) = get_parameters_and_delta_from_matrix(total_Z_matrix)
+
+                excel_z_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency
+                excel_z_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(parameter_a).strip('()')
+                excel_z_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = str(parameter_b).strip('()')
+                excel_z_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(parameter_c).strip('()')
+                excel_z_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(parameter_d).strip('()')
+                excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
+
+                row_counter = row_counter + 1
+
+        elif parameters_to_calculate == 'Y':
+            for frequency in frequency_range:
+                excel_y_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_Y_PARAMETERS_SHEET]
+
+                total_ABCD_matrix = get_total_ABCD_matrix(at_frequency=frequency)
+                total_Y_matrix = convert_ABCD_matrix_to_Y_matrix(total_ABCD_matrix)
+                (parameter_a, parameter_b , parameter_c, parameter_d, delta) = get_parameters_and_delta_from_matrix(total_Y_matrix)
+
+                excel_y_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency
+                excel_y_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(parameter_a).strip('()')
+                excel_y_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = str(parameter_b).strip('()')
+                excel_y_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(parameter_c).strip('()')
+                excel_y_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(parameter_d).strip('()')
+                excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
+
+                row_counter = row_counter + 1
+
+        elif parameters_to_calculate == 'S':
+            for frequency in frequency_range:
+                excel_s_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_S_PARAMETERS_SHEET]
+
+                total_ABCD_matrix = get_total_ABCD_matrix(at_frequency=frequency)
+                total_S_matrix = convert_ABCD_matrix_to_S_matrix(total_ABCD_matrix, z_0=complex(50,0))
+                (parameter_a, parameter_b , parameter_c, parameter_d, delta) = get_parameters_and_delta_from_matrix(total_S_matrix)
+
+                excel_s_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency
+                excel_s_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(parameter_a).strip('()')
+                excel_s_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = str(parameter_b).strip('()')
+                excel_s_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(parameter_c).strip('()')
+                excel_s_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(parameter_d).strip('()')
+                excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
+
+                row_counter = row_counter + 1
+
     else:
         messagebox.showerror(title='Error', message='Empty parameters to calculate')
 
 def plot_parameters():
-    excel_abcd_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_ABCD_PARAMETERS_SHEET]
 
+    parameters_to_calculate = parameters_to_calculate_combobox.get()
+
+    sheet_mapping = {
+        'ABCD': cfg.EXCEL_ABCD_PARAMETERS_SHEET,
+        'Z': cfg.EXCEL_Z_PARAMETERS_SHEET,
+        'Y': cfg.EXCEL_Y_PARAMETERS_SHEET,
+        'S': cfg.EXCEL_S_PARAMETERS_SHEET
+    }
+
+    if parameters_to_calculate in sheet_mapping:
+
+        sheet = excel_network_parameters_workbook[sheet_mapping[parameters_to_calculate]]
+
+        frequencies, parameters = extract_parameters(sheet)
+
+        parameter_a, parameter_b, parameter_c, parameter_d = parameters
+
+        format_to_plot = plot_parameters_in_format_combobox.get()
+
+        plot_functions = {
+            'Rectangular (Magnitude vs Freq)': plot_magnitude_vs_frequency,
+            'Rectangular (Phase vs Freq)': plot_phase_vs_frequency,
+            'Rectangular (RI vs Freq)': plot_r_i_vs_frequency,
+            'Polar': plot_polar,
+            'Smith chart': plot_smith_chart
+        }
+
+        if format_to_plot in plot_functions:
+            plot_functions[format_to_plot](frequencies, parameter_a, parameter_b, parameter_c, parameter_d, type_of_parameters=parameters_to_calculate)
+
+def extract_parameters(sheet):
     frequencies = []
-    parameter_a = []
-    parameter_b = []
-    parameter_c = []
-    parameter_d = []
+    parameter_columns = [cfg.EXCEL_COLUMN_B, cfg.EXCEL_COLUMN_C, cfg.EXCEL_COLUMN_D, cfg.EXCEL_COLUMN_E]
+    parameters = [[] for _ in range(len(parameter_columns))]
 
-    for row in range(cfg.EXCEL_INITIAL_ROW, excel_abcd_parameters_sheet.max_row):
+    for row in range(cfg.EXCEL_INITIAL_ROW, sheet.max_row):
+        frequencies.append(sheet.cell(row=row, column=cfg.EXCEL_COLUMN_A).value)
+        for i, col in enumerate(parameter_columns):
+            value = sheet.cell(row=row, column=col).value
+            parameters[i].append(complex(value) if value is not None else 0 + 0j)
 
-        frequencies.append(excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_A).value)
-
-        a = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_B).value
-        b = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_C).value
-        c = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_D).value
-        d = excel_abcd_parameters_sheet.cell(row=row, column=cfg.EXCEL_COLUMN_E).value
-
-        if a is None:
-            a = 0 + 0j
-        if b is None:
-            b = 0 + 0j
-        if c is None:
-            c = 0 + 0j
-        if d is None:
-            d = 0 + 0j
-
-        parameter_a.append(complex(a))
-        parameter_b.append(complex(b))
-        parameter_c.append(complex(c))
-        parameter_d.append(complex(d))
-
-    format_to_plot = plot_parameters_in_format_combobox.get()
-
-    if format_to_plot == 'Rectangular (Magnitude vs Freq)':
-        plot_magnitude_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
-
-    elif format_to_plot == 'Rectangular (Phase vs Freq)':
-        plot_phase_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
-
-    elif format_to_plot == 'Rectangular (RI vs Freq)':
-        plot_r_i_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
-
-    elif format_to_plot == 'Polar':
-        plot_polar(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
-
-    elif format_to_plot == 'Smith chart':
-        plot_smith_chart(frequencies, parameter_a, parameter_b, parameter_c, parameter_d)
+    return frequencies, parameters
 
 def get_frequency_with_prefixed(frequency_value: float):
     frequency_value__length = len(str(int(frequency_value)))
