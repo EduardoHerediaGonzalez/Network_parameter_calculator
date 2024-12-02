@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from source.network_parameter_conversions import convert_ABCD_matrix_to_S_matrix
+from source.network_parameter_conversions import *
 import skrf as rf
 
  # **************************** Por ahora asumiendo que se calculan paráMetros ABCD ************************************
@@ -146,6 +146,8 @@ def plot_polar(frequencies, parameter_a, parameter_b, parameter_c, parameter_d, 
     magnitude_a = np.abs(parameter_a)
     phase_a = np.angle(parameter_a, deg=True)
 
+    print(magnitude_a)
+    print(phase_a)
     magnitude_b = np.abs(parameter_b)
     phase_b = np.angle(parameter_b, deg=True)
 
@@ -186,7 +188,7 @@ def plot_polar(frequencies, parameter_a, parameter_b, parameter_c, parameter_d, 
     plt.tight_layout(rect=(0, 0, 1, 0.95))
     plt.show()
 
-def plot_smith_chart(frequencies, parameter_a, parameter_b, parameter_c, parameter_d, type_of_parameters, z_0=50):
+def plot_smith_chart(frequencies, parameter_a, parameter_b, parameter_c, parameter_d, type_of_parameters):
 
     s_parameters_a = []
     s_parameters_b = []
@@ -195,13 +197,36 @@ def plot_smith_chart(frequencies, parameter_a, parameter_b, parameter_c, paramet
 
     if type_of_parameters != "S":
         for a, b, c, d in zip(parameter_a, parameter_b, parameter_c, parameter_d):
-            matrix_abcd = np.matrix([[a, b], [c, d]])
-            s_matrix = convert_ABCD_matrix_to_S_matrix(matrix_abcd, z_0)
 
-            s_parameters_a.append(s_matrix[0, 0])  # S11
-            s_parameters_b.append(s_matrix[0, 1])  # S12
-            s_parameters_c.append(s_matrix[1, 0])  # S21
-            s_parameters_d.append(s_matrix[1, 1])  # S22
+            if type_of_parameters == "ABCD":
+                matrix_abcd = np.matrix([[a, b], [c, d]])
+                s_matrix = convert_ABCD_matrix_to_S_matrix(matrix_abcd, z_0=complex(50,0))
+
+                s_parameters_a.append(s_matrix[0, 0])  # S11
+                s_parameters_b.append(s_matrix[0, 1])  # S12
+                s_parameters_c.append(s_matrix[1, 0])  # S21
+                s_parameters_d.append(s_matrix[1, 1])  # S22
+
+            elif type_of_parameters == "Z":
+                matrix_z = np.matrix([[a, b], [c, d]])
+                abcd_matrix = convert_Z_matrix_to_ABCD_matrix(matrix_z)
+                s_matrix = convert_ABCD_matrix_to_S_matrix(abcd_matrix, z_0=complex(50,0))
+
+                s_parameters_a.append(s_matrix[0, 0])  # S11
+                s_parameters_b.append(s_matrix[0, 1])  # S12
+                s_parameters_c.append(s_matrix[1, 0])  # S21
+                s_parameters_d.append(s_matrix[1, 1])  # S22
+
+            elif type_of_parameters == "Y":
+                matrix_y = np.matrix([[a, b], [c, d]])
+                abcd_matrix = convert_Y_matrix_to_ABCD_matrix(matrix_y)
+                s_matrix = convert_ABCD_matrix_to_S_matrix(abcd_matrix, z_0=complex(50,0))
+
+                s_parameters_a.append(s_matrix[0, 0])  # S11
+                s_parameters_b.append(s_matrix[0, 1])  # S12
+                s_parameters_c.append(s_matrix[1, 0])  # S21
+                s_parameters_d.append(s_matrix[1, 1])  # S22
+
         print("Enters conversion to S")
 
     else:

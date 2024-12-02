@@ -490,30 +490,22 @@ def get_total_ABCD_matrix(at_frequency: float):
     total_of_sub_networks = len(sub_networks)
 
     for sub_network_interconnection in sub_networks_interconnection:
+
         _sub_network_ABCD_matrix = sub_networks[sub_network_index].get_ABCD_matrix(at_frequency=at_frequency)
 
         if sub_network_interconnection == cfg.SUB_NETWORK_DEFAULT_CONNECTION:
             total_ABCD_matrix = total_ABCD_matrix * _sub_network_ABCD_matrix
 
         elif sub_network_interconnection == cfg.INTERCONNECTION_TYPES[cfg.SERIES_CONNECTION_INDEX]:
-            total_Z_matrix = total_Z_matrix + convert_ABCD_matrix_to_Z_matrix(_sub_network_ABCD_matrix)
 
-            if sub_network_index < (total_of_sub_networks - 1):
-                if sub_networks_interconnection[sub_network_index + 1] != cfg.INTERCONNECTION_TYPES[cfg.SERIES_CONNECTION_INDEX]:
-                    total_ABCD_matrix = total_ABCD_matrix * convert_Z_matrix_to_ABCD_matrix(total_Z_matrix)
+            total_Z_matrix = convert_ABCD_matrix_to_Z_matrix(total_ABCD_matrix) + convert_ABCD_matrix_to_Z_matrix(_sub_network_ABCD_matrix)
+            total_ABCD_matrix = convert_Z_matrix_to_ABCD_matrix(total_Z_matrix)
 
-            else:
-                total_ABCD_matrix = total_ABCD_matrix * convert_Z_matrix_to_ABCD_matrix(total_Z_matrix)
+        elif sub_network_interconnection == cfg.INTERCONNECTION_TYPES[cfg.SERIES_CONNECTION_INDEX]:
 
-        elif sub_network_interconnection == cfg.INTERCONNECTION_TYPES[cfg.PARALLEL_CONNECTION_INDEX]:
-            total_Y_matrix = total_Y_matrix + convert_ABCD_matrix_to_Y_matrix(_sub_network_ABCD_matrix)
+            total_Z_matrix = convert_ABCD_matrix_to_Z_matrix(total_ABCD_matrix) + convert_ABCD_matrix_to_Z_matrix(_sub_network_ABCD_matrix)
+            total_ABCD_matrix = convert_Z_matrix_to_ABCD_matrix(total_Z_matrix)
 
-            if sub_network_index < (total_of_sub_networks - 1):
-                if sub_networks_interconnection[sub_network_index + 1] != cfg.INTERCONNECTION_TYPES[cfg.PARALLEL_CONNECTION_INDEX]:
-                    total_ABCD_matrix = total_ABCD_matrix * convert_Y_matrix_to_ABCD_matrix(total_Y_matrix)
-
-            else:
-                total_ABCD_matrix = total_ABCD_matrix * convert_Y_matrix_to_ABCD_matrix(total_Y_matrix)
 
         sub_network_index = sub_network_index + 1
 
