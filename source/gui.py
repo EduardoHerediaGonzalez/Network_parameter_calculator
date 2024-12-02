@@ -1,17 +1,17 @@
 import os
 import shutil
 import tkinter as tk
+import pandas as pd
 from tkinter import messagebox
 from tkinter import ttk
 
-import pandas as pd
 from openpyxl import *
 
 from source.common_two_port_circuits import *
 from source.plot_parameters import *
-from source.touchstone_files.touchstonefile import *
 from source.excel_sheet_format import *
 from source.network_parameter_conversions import *
+from source.touchstone_files.touchstone import *
 
 excel_base_template_workbook = load_workbook(filename=os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_BASE_TEMPLATE_FILE))
 excel_base_template_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))

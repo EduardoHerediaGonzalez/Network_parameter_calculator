@@ -12,3 +12,5 @@ source/test.py
 source/Network parameters.xlsx
 source/excel_files/*
 source/touchstone_files/*
+
+!source/touchstone_files/touchstone.py

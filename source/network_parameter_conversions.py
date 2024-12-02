@@ -37,7 +37,7 @@ def convert_ABCD_matrix_to_Y_matrix(abcd_matrix: matrix):
 
     return Y_matrix
 
-def convert_ABCD_matrix_to_S_matrix(abcd_matrix: matrix, z_0: complex):
+def convert_ABCD_matrix_to_S_matrix(abcd_matrix: matrix, z_0: float):
     parameter_a, parameter_b, parameter_c, parameter_d, delta_abcd = get_parameters_and_delta_from_matrix(abcd_matrix)
     psi = parameter_a + (parameter_b / z_0) + (parameter_c * z_0) + parameter_d
 
@@ -69,6 +69,18 @@ def convert_Y_matrix_to_ABCD_matrix(y_matrix: matrix):
     parameter_b =  -1 / parameter_y21
     parameter_c =  -delta_y / parameter_y21
     parameter_d = -parameter_y11 / parameter_y21
+
+    abcd_matrix = np.matrix([[parameter_a, parameter_b], [parameter_c, parameter_d]])
+
+    return abcd_matrix
+
+def convert_S_matrix_to_ABCD_matrix(s_matrix: matrix, z_0: float):
+    parameter_s11, parameter_s12, parameter_s21, parameter_s22, delta_s = get_parameters_and_delta_from_matrix(s_matrix)
+
+    parameter_a = (((1 + parameter_s11) * (1 - parameter_s22)) + (parameter_s12 * parameter_s21)) / (2 * parameter_s21)
+    parameter_b = z_0 * (((1 + parameter_s11) * (1 + parameter_s22)) - (parameter_s12 * parameter_s21)) / (2 * parameter_s21)
+    parameter_c = (((1 - parameter_s11) * (1 - parameter_s22)) - (parameter_s12 * parameter_s21)) / (2 * parameter_s21 * z_0)
+    parameter_d = (((1 - parameter_s11) * (1 + parameter_s22)) + (parameter_s12 * parameter_s21)) / (2 * parameter_s21)
 
     abcd_matrix = np.matrix([[parameter_a, parameter_b], [parameter_c, parameter_d]])
 
