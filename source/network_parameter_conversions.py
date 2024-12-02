@@ -2,14 +2,12 @@ import numpy as np
 from numpy.matrixlib.defmatrix import matrix
 
 def get_parameters_and_delta_from_matrix(x_matrix: matrix):
-    _matrix = x_matrix.tolist()
-    matrix_row_1 = _matrix[0]
-    matrix_row_2 = _matrix[1]
+    _matrix = x_matrix.flatten()
 
-    parameter_11 = matrix_row_1[0]
-    parameter_12 = matrix_row_1[1]
-    parameter_21 = matrix_row_2[0]
-    parameter_22 = matrix_row_2[1]
+    parameter_11 = _matrix.item(0)
+    parameter_12 = _matrix.item(1)
+    parameter_21 = _matrix.item(2)
+    parameter_22 = _matrix.item(3)
 
     delta = (parameter_11 * parameter_22) - (parameter_12 * parameter_21)
 

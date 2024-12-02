@@ -1,14 +1,13 @@
 from numpy.matrixlib.defmatrix import matrix
 from source.passive_components import *
 
-# Definition of the class that represents the series impedance circuit of a two-port network
+# Definition of the class that represents a series impedance circuit
 class SeriesImpedanceCircuit:
     # Private class attributes
     __parameter_a = 1
     __parameter_b: complex
     __parameter_c = 0
     __parameter_d = 1
-    __delta_abcd: complex
     __matrix_abcd: matrix
     __impedance: Impedance
 
@@ -17,24 +16,18 @@ class SeriesImpedanceCircuit:
         self.__impedance = Impedance(type_of_element=type_of_element, with_value=element_value)
 
     # Public class methods
-    def get_delta_abcd(self, at_frequency):
-        self.__delta_abcd = (self.__parameter_a * self.__parameter_d) - (self.__impedance.get_impedance(at_frequency=at_frequency) * self.__parameter_c)
-
-        return  int(self.__delta_abcd.real)
-
     def get_ABCD_matrix(self, at_frequency):
         self.__matrix_abcd = np.matrix([[self.__parameter_a, self.__impedance.get_impedance(at_frequency=at_frequency)], [self.__parameter_c, self.__parameter_d]])
 
         return self.__matrix_abcd
 
-# Definition of the class that represents the shunt impedance circuit of a two-port network
+# Definition of the class that represents a shunt impedance circuit
 class ShuntImpedanceCircuit:
     # Private class attributes
     __parameter_a = 1
     __parameter_b = 0
     __parameter_c: complex
     __parameter_d = 1
-    __delta_abcd: complex
     __matrix_abcd: matrix
     __admittance: Admittance
 
@@ -43,24 +36,18 @@ class ShuntImpedanceCircuit:
         self.__admittance = Admittance(type_of_element=type_of_element, with_value=element_value)
 
     # Public class methods
-    def get_delta_abcd(self, at_frequency):
-        self.__delta_abcd = (self.__parameter_a * self.__parameter_d) - (self.__parameter_b * self.__admittance.get_admittance(at_frequency=at_frequency))
-
-        return  int(self.__delta_abcd.real)
-
     def get_ABCD_matrix(self, at_frequency):
         self.__matrix_abcd = np.matrix([[self.__parameter_a, self.__parameter_b], [self.__admittance.get_admittance(at_frequency=at_frequency), self.__parameter_d]])
 
         return self.__matrix_abcd
 
-# Definition of the class that represents the T circuit of a two-port network
+# Definition of the class that represents a T circuit
 class TCircuit:
     # Private class attributes
     __parameter_a: complex
     __parameter_b: complex
     __parameter_c: complex
     __parameter_d: complex
-    __delta_abcd: complex
     __matrix_abcd: matrix
     __impedance_a: Impedance
     __impedance_b: Impedance
@@ -108,16 +95,6 @@ class TCircuit:
         return self.__parameter_d
 
     # Public class methods
-    def get_delta_abcd(self, at_frequency):
-        parameter_a = self.__get_parameter_a(at_frequency=at_frequency)
-        parameter_b = self.__get_parameter_b(at_frequency=at_frequency)
-        parameter_c = self.__get_parameter_c(at_frequency=at_frequency)
-        parameter_d = self.__get_parameter_d(at_frequency=at_frequency)
-
-        self.__delta_abcd = (parameter_a * parameter_d) - (parameter_b * parameter_c)
-
-        return  self.__delta_abcd
-
     def get_ABCD_matrix(self, at_frequency):
         parameter_a = self.__get_parameter_a(at_frequency=at_frequency)
         parameter_b = self.__get_parameter_b(at_frequency=at_frequency)
@@ -128,14 +105,13 @@ class TCircuit:
 
         return self.__matrix_abcd
 
-# Definition of the class that represents the Pi circuit of a two-port network
+# Definition of the class that represents a Pi circuit
 class PiCircuit:
     # Private class attributes
     __parameter_a: complex
     __parameter_b: complex
     __parameter_c: complex
     __parameter_d: complex
-    __delta_abcd: complex
     __matrix_abcd: matrix
     __admittance_a: Admittance
     __admittance_b: Admittance
@@ -183,17 +159,144 @@ class PiCircuit:
         return self.__parameter_d
 
     # Public class methods
-    def get_delta_abcd(self, at_frequency):
-        self.__delta_abcd = (self.__get_parameter_a(at_frequency=at_frequency) * self.__get_parameter_d(
-            at_frequency=at_frequency)) - (self.__get_parameter_b(at_frequency=at_frequency) * self.__get_parameter_c(
-            at_frequency=at_frequency))
-
-        return self.__delta_abcd
-
     def get_ABCD_matrix(self, at_frequency):
         self.__matrix_abcd = np.matrix(
             [[self.__get_parameter_a(at_frequency=at_frequency), self.__get_parameter_b(at_frequency=at_frequency)],
              [self.__get_parameter_c(at_frequency=at_frequency), self.__get_parameter_d(at_frequency=at_frequency)]],
             dtype=complex)
+
+        return self.__matrix_abcd
+
+# Definition of the class that represents a Transmission line circuit
+class TransmissionLineCircuit:
+    # Private class attributes
+    __parameter_a: complex
+    __parameter_b: complex
+    __parameter_c: complex
+    __parameter_d: complex
+    __matrix_abcd: matrix
+    __line_length: float
+    __characteristic_impedance: float
+    __phase_constant: float
+
+    # Class constructors
+    def __init__(self, line_length: float = 0, characteristic_impedance: float = 50):
+        self.__line_length = line_length
+        self.__characteristic_impedance = characteristic_impedance
+
+    # Private class methods
+    def __get_phase_constant(self, at_frequency):
+        self.__phase_constant = (2 * np.pi * at_frequency) / 3e8
+
+        return self.__phase_constant
+
+    def __get_electrical_length(self, at_frequency):
+        electrical_length = self.__get_phase_constant(at_frequency=at_frequency) * self.__line_length
+
+        return electrical_length
+
+    def __get_parameter_a(self, at_frequency):
+        self.__parameter_a = complex(np.cos(self.__get_electrical_length(at_frequency=at_frequency)), 0)
+
+        return self.__parameter_a
+
+    def __get_parameter_b(self, at_frequency):
+        self.__parameter_b = complex(0, (self.__characteristic_impedance * np.sin(self.__get_electrical_length(at_frequency=at_frequency))))
+
+        return self.__parameter_b
+
+    def __get_parameter_c(self, at_frequency):
+        self.__parameter_c = complex(0, (np.sin(self.__get_electrical_length(at_frequency=at_frequency)) / self.__characteristic_impedance))
+
+        return self.__parameter_c
+
+    def __get_parameter_d(self, at_frequency):
+        self.__parameter_d = complex(np.cos(self.__get_electrical_length(at_frequency=at_frequency)), 0)
+
+        return self.__parameter_d
+
+    # Public class methods
+    def get_ABCD_matrix(self, at_frequency):
+        self.__matrix_abcd = np.matrix(
+            [[self.__get_parameter_a(at_frequency=at_frequency), self.__get_parameter_b(at_frequency=at_frequency)],
+             [self.__get_parameter_c(at_frequency=at_frequency), self.__get_parameter_d(at_frequency=at_frequency)]],
+            dtype=complex)
+
+        return self.__matrix_abcd
+
+# Definition of the class that represents an Open stub circuit
+class OpenStubCircuit:
+    # Private class attributes
+    __parameter_a = 1
+    __parameter_b = 0
+    __parameter_c: complex
+    __parameter_d = 1
+    __matrix_abcd: matrix
+    __line_length: float
+    __characteristic_impedance: float
+    __phase_constant: float
+
+    # Class constructors
+    def __init__(self, line_length: float = 0, characteristic_impedance: float = 50):
+        self.__line_length = line_length
+        self.__characteristic_impedance = characteristic_impedance
+
+    # Private class methods
+    def __get_phase_constant(self, at_frequency):
+        self.__phase_constant = (2 * np.pi * at_frequency) / 3e8
+
+        return self.__phase_constant
+
+    def __get_electrical_length(self, at_frequency):
+        electrical_length = self.__get_phase_constant(at_frequency=at_frequency) * self.__line_length
+
+        return electrical_length
+
+    def __get_parameter_c(self, at_frequency):
+        self.__parameter_c = complex(0, (1 / (self.__characteristic_impedance * (1 / np.tan(self.__get_electrical_length(at_frequency=at_frequency))))))
+
+        return self.__parameter_c
+
+    # Public class methods
+    def get_ABCD_matrix(self, at_frequency):
+        self.__matrix_abcd = np.matrix([[self.__parameter_a, self.__parameter_b], [self.__get_parameter_c(at_frequency=at_frequency), self.__parameter_d]])
+
+        return self.__matrix_abcd
+
+# Definition of the class that represents a Short stub circuit
+class ShortStubCircuit:
+    # Private class attributes
+    __parameter_a = 1
+    __parameter_b = 0
+    __parameter_c: complex
+    __parameter_d = 1
+    __matrix_abcd: matrix
+    __line_length: float
+    __characteristic_impedance: float
+    __phase_constant: float
+
+    # Class constructors
+    def __init__(self, line_length: float = 0, characteristic_impedance: float = 50):
+        self.__line_length = line_length
+        self.__characteristic_impedance = characteristic_impedance
+
+    # Private class methods
+    def __get_phase_constant(self, at_frequency):
+        self.__phase_constant = (2 * np.pi * at_frequency) / 3e8
+
+        return self.__phase_constant
+
+    def __get_electrical_length(self, at_frequency):
+        electrical_length = self.__get_phase_constant(at_frequency=at_frequency) * self.__line_length
+
+        return electrical_length
+
+    def __get_parameter_c(self, at_frequency):
+        self.__parameter_c = complex(0, (-1 / (self.__characteristic_impedance * np.tan(self.__get_electrical_length(at_frequency=at_frequency)))))
+        return self.__parameter_c
+
+    # Public class methods
+    def get_ABCD_matrix(self, at_frequency):
+        self.__matrix_abcd = np.matrix([[self.__parameter_a, self.__parameter_b], [self.__get_parameter_c(at_frequency=at_frequency), self.__parameter_d]])
 
         return self.__matrix_abcd
