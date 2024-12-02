@@ -1,16 +1,15 @@
 import os
 import shutil
 import tkinter as tk
-import pandas as pd
 from tkinter import messagebox
 from tkinter import ttk
 
+import pandas as pd
 from openpyxl import *
 
 from source.common_two_port_circuits import *
-from source.plot_parameters import *
 from source.excel_sheet_format import *
-from source.network_parameter_conversions import *
+from source.plot_parameters import *
 from source.touchstone_files.touchstone import *
 
 excel_base_template_workbook = load_workbook(filename=os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_BASE_TEMPLATE_FILE))
@@ -120,7 +119,7 @@ def add_sub_network():
            type_of_circuit == cfg.CIRCUIT_TYPES[cfg.SHUNT_IMPEDANCE_CIRCUIT_TYPE_INDEX] or
            type_of_circuit == cfg.CIRCUIT_TYPES[cfg.T_CIRCUIT_TYPE_INDEX] or
            type_of_circuit == cfg.CIRCUIT_TYPES[cfg.PI_CIRCUIT_TYPE_INDEX]) and
-           element_a != '' and element_b != '' and element_c != ''):
+           element_a == '' and element_b == '' and element_c == ''):
         messagebox.showerror(title='Error', message='Empty values')
 
     elif ((type_of_circuit == cfg.CIRCUIT_TYPES[cfg.SERIES_IMPEDANCE_CIRCUIT_TYPE_INDEX] or
@@ -396,19 +395,19 @@ def plot_parameters():
     format_to_plot = plot_parameters_in_format_combobox.get()
 
     if format_to_plot == cfg.PLOT_FORMATS[0]:
-        plot_magnitude_vs_frequency(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d)
+        plot_magnitude_vs_frequency(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d, parameters_to_calculate)
 
     elif format_to_plot == cfg.PLOT_FORMATS[1]:
-        plot_phase_vs_frequency(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d)
+        plot_phase_vs_frequency(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d, parameters_to_calculate)
 
     elif format_to_plot == cfg.PLOT_FORMATS[2]:
-        plot_r_i_vs_frequency(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d)
+        plot_r_i_vs_frequency(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d, parameters_to_calculate)
 
     elif format_to_plot == cfg.PLOT_FORMATS[3]:
-        plot_polar(parameter_a, parameter_b, parameter_c, parameter_d)
+        plot_polar(parameter_a, parameter_b, parameter_c, parameter_d, parameters_to_calculate)
 
     elif format_to_plot == cfg.PLOT_FORMATS[4]:
-        plot_smith_chart(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d)
+        plot_smith_chart(parameter_a, parameter_b, parameter_c, parameter_d, parameters_to_calculate)
 
     reset_plot_parameters_combobox.set('')
 
