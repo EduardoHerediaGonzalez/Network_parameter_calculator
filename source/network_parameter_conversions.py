@@ -2,14 +2,12 @@ import numpy as np
 from numpy.matrixlib.defmatrix import matrix
 
 def get_parameters_and_delta_from_matrix(x_matrix: matrix):
-    _matrix = x_matrix.tolist()
-    matrix_row_1 = _matrix[0]
-    matrix_row_2 = _matrix[1]
+    _matrix = x_matrix.flatten()
 
-    parameter_11 = matrix_row_1[0]
-    parameter_12 = matrix_row_1[1]
-    parameter_21 = matrix_row_2[0]
-    parameter_22 = matrix_row_2[1]
+    parameter_11 = _matrix.item(0)
+    parameter_12 = _matrix.item(1)
+    parameter_21 = _matrix.item(2)
+    parameter_22 = _matrix.item(3)
 
     delta = (parameter_11 * parameter_22) - (parameter_12 * parameter_21)
 
@@ -39,7 +37,7 @@ def convert_ABCD_matrix_to_Y_matrix(abcd_matrix: matrix):
 
     return Y_matrix
 
-def convert_ABCD_matrix_to_S_matrix(abcd_matrix: matrix, z_0: complex):
+def convert_ABCD_matrix_to_S_matrix(abcd_matrix: matrix, z_0: float):
     parameter_a, parameter_b, parameter_c, parameter_d, delta_abcd = get_parameters_and_delta_from_matrix(abcd_matrix)
     psi = parameter_a + (parameter_b / z_0) + (parameter_c * z_0) + parameter_d
 
@@ -76,16 +74,14 @@ def convert_Y_matrix_to_ABCD_matrix(y_matrix: matrix):
 
     return abcd_matrix
 
-def convert_S_matrix_to_ABCD_matrix(s_matrix: matrix, z_0: complex):
+def convert_S_matrix_to_ABCD_matrix(s_matrix: matrix, z_0: float):
     parameter_s11, parameter_s12, parameter_s21, parameter_s22, delta_s = get_parameters_and_delta_from_matrix(s_matrix)
 
-    psi = 2 * parameter_s11 / parameter_s21
+    parameter_a = (((1 + parameter_s11) * (1 - parameter_s22)) + (parameter_s12 * parameter_s21)) / (2 * parameter_s21)
+    parameter_b = z_0 * (((1 + parameter_s11) * (1 + parameter_s22)) - (parameter_s12 * parameter_s21)) / (2 * parameter_s21)
+    parameter_c = (((1 - parameter_s11) * (1 - parameter_s22)) - (parameter_s12 * parameter_s21)) / (2 * parameter_s21 * z_0)
+    parameter_d = (((1 - parameter_s11) * (1 + parameter_s22)) + (parameter_s12 * parameter_s21)) / (2 * parameter_s21)
 
-    parameter_a = ((1 + parameter_s11) * (1 - parameter_s22) + parameter_s12 * parameter_s21) / psi
-    parameter_b = z_0 * (((1 + parameter_s11) * (1 + parameter_s22) - parameter_s12 * parameter_s21) / psi)
-    parameter_c = ((1 - parameter_s11) * (1 - parameter_s22) - parameter_s12 * parameter_s21) / (psi * z_0)
-    parameter_d = ((1 - parameter_s11) * (1 + parameter_s22) + parameter_s12 * parameter_s21) / psi
+    abcd_matrix = np.matrix([[parameter_a, parameter_b], [parameter_c, parameter_d]])
 
-    ABCD_matrix = np.matrix([[parameter_a, parameter_b], [parameter_c, parameter_d]])
-
-    return ABCD_matrix
+    return abcd_matrix

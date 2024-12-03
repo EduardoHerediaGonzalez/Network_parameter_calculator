@@ -25,7 +25,6 @@ class Resistor:
     def get_conductance(self):
         return self.__conductance
 
-
 # Definition of the class that represent a capacitor component
 class Capacitor:
     # Private class attributes
@@ -57,7 +56,6 @@ class Capacitor:
 
         return self.__susceptance
 
-
 # Definition of the class that represent an inductor component
 class Inductor:
     # Private class attributes
@@ -88,7 +86,6 @@ class Inductor:
             self.__susceptance = float(0)
 
         return  self.__susceptance
-
 
 # Definition of the class that represent an impedance.
 class Impedance:
@@ -133,7 +130,6 @@ class Impedance:
         self.__impedance = complex(self.__resistance, self.__reactance)
 
         return self.__impedance
-
 
 # Definition of the class that represent an admittance.
 class Admittance:
