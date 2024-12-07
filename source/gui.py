@@ -5,7 +5,6 @@ from tkinter import messagebox
 from tkinter import ttk
 
 import pandas as pd
-from openpyxl import *
 
 from source.common_two_port_circuits import *
 from source.excel_sheet_format import *
@@ -37,7 +36,7 @@ def add_touchstone_file():
     if os.path.exists(touchstone_file_path):
         shutil.copy2(touchstone_file_path, os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.TXT_TOUCHSTONE_FILE_NAME))
 
-        data_frame = pd.read_csv(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.TXT_TOUCHSTONE_FILE_NAME), sep=',')
+        data_frame = pd.read_csv(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.TXT_TOUCHSTONE_FILE_NAME))
         data_frame.to_excel(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.EXCEL_TOUCHSTONE_FILE_NAME), index=False)
         os.remove(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.TXT_TOUCHSTONE_FILE_NAME))
 
@@ -444,10 +443,20 @@ def download_calculated_parameters_file():
                 excel_workbook.remove(excel_sheet_to_remove)
 
         excel_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, 'temp.xlsx'))
+        excel_workbook.close()
+        del excel_workbook
 
         excel_file_path = os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, 'temp.xlsx')
         shutil.copy2(excel_file_path, os.path.join(download_file_path, excel_file_name))
         os.remove(excel_file_path)
+
+        if add_touchstone_file_function_callback:
+            write_touchstone_file(network_parameters_workbook=excel_network_parameters_workbook)
+            df = pd.read_excel(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.EXCEL_TOUCHSTONE_FILE_NAME))
+            df.to_csv(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.TXT_TOUCHSTONE_FILE_NAME), index=False)
+            touchstone_file_name = cfg.TXT_TOUCHSTONE_FILE_NAME.split('.')[0] + '.s2p'
+            os.rename(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.TXT_TOUCHSTONE_FILE_NAME), os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, touchstone_file_name))
+            shutil.copy2(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, touchstone_file_name), download_file_path)
 
         reset_download_calculated_parameters_file_entry.set('')
         messagebox.showinfo(title='Info', message='Downloaded file successfully')
