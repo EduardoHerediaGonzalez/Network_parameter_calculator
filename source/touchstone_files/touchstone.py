@@ -15,7 +15,6 @@ def get_frequency_parameters_from_touchstone_file(excel_touchstone_sheet):
     global hashtag_symbol_row
 
     while symbol != '#':
-
         row_counter = row_counter + 1
         symbol = excel_touchstone_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value
         symbol = symbol.split()

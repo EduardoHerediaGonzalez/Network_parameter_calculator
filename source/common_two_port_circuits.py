@@ -1,5 +1,8 @@
 from numpy.matrixlib.defmatrix import matrix
 from source.passive_components import *
+import source.config_parameters as cfg
+
+SPEED_LIGHT_VELOCITY = 3e8
 
 # Definition of the class that represents a series impedance circuit
 class SeriesImpedanceCircuit:
@@ -180,13 +183,13 @@ class TransmissionLineCircuit:
     __phase_constant: float
 
     # Class constructors
-    def __init__(self, line_length: float = 0, characteristic_impedance: float = 50):
+    def __init__(self, line_length: float = 0, characteristic_impedance: float = cfg.CHARACTERISTIC_IMPEDANCE_50_OHMS):
         self.__line_length = line_length
         self.__characteristic_impedance = characteristic_impedance
 
     # Private class methods
     def __get_phase_constant(self, at_frequency):
-        self.__phase_constant = (2 * np.pi * at_frequency) / 3e8
+        self.__phase_constant = (2 * np.pi * at_frequency) / SPEED_LIGHT_VELOCITY
 
         return self.__phase_constant
 
@@ -237,13 +240,13 @@ class OpenStubCircuit:
     __phase_constant: float
 
     # Class constructors
-    def __init__(self, line_length: float = 0, characteristic_impedance: float = 50):
+    def __init__(self, line_length: float = 0, characteristic_impedance: float = cfg.CHARACTERISTIC_IMPEDANCE_50_OHMS):
         self.__line_length = line_length
         self.__characteristic_impedance = characteristic_impedance
 
     # Private class methods
     def __get_phase_constant(self, at_frequency):
-        self.__phase_constant = (2 * np.pi * at_frequency) / 3e8
+        self.__phase_constant = (2 * np.pi * at_frequency) / SPEED_LIGHT_VELOCITY
 
         return self.__phase_constant
 
@@ -276,13 +279,13 @@ class ShortStubCircuit:
     __phase_constant: float
 
     # Class constructors
-    def __init__(self, line_length: float = 0, characteristic_impedance: float = 50):
+    def __init__(self, line_length: float = 0, characteristic_impedance: float = cfg.CHARACTERISTIC_IMPEDANCE_50_OHMS):
         self.__line_length = line_length
         self.__characteristic_impedance = characteristic_impedance
 
     # Private class methods
     def __get_phase_constant(self, at_frequency):
-        self.__phase_constant = (2 * np.pi * at_frequency) / 3e8
+        self.__phase_constant = (2 * np.pi * at_frequency) / SPEED_LIGHT_VELOCITY
 
         return self.__phase_constant
 
