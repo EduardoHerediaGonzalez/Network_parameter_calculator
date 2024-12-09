@@ -85,38 +85,34 @@ def plot_phase_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, 
 
     plt.show()
 
-def plot_RI_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d, type_of_parameters):
+def plot_real_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d, type_of_parameters):
     label_a, label_b, label_c, label_d = labels[type_of_parameters]
 
-    real_a, imag_a = extract_real_imag(parameter_a)
-    real_b, imag_b = extract_real_imag(parameter_b)
-    real_c, imag_c = extract_real_imag(parameter_c)
-    real_d, imag_d = extract_real_imag(parameter_d)
+    real_a = extract_real_part(parameter_a)
+    real_b = extract_real_part(parameter_b)
+    real_c = extract_real_part(parameter_c)
+    real_d = extract_real_part(parameter_d)
 
     fig, axs = plt.subplots(2, 2, figsize=(12, 8))
-    fig.suptitle(f"RI vs Freq ({type_of_parameters} Parameters)", fontsize=16)
+    fig.suptitle(f"Real vs Freq ({type_of_parameters} Parameters)", fontsize=16)
 
-    axs[0, 0].plot(frequencies, real_a, label="Real", color="blue")
-    axs[0, 0].plot(frequencies, imag_a, label="Imag", color="red", linestyle="--")
-    axs[0, 0].set_ylabel(f"RI ({label_a})")
+    axs[0, 0].plot(frequencies, real_a, color="red")
+    axs[0, 0].set_ylabel(f"Real({label_a})")
     axs[0, 0].set_xlabel("Freq, Hz")
     axs[0, 0].grid()
 
-    axs[0, 1].plot(frequencies, real_b, label="Real", color="blue")
-    axs[0, 1].plot(frequencies, imag_b, label="Imag", color="red", linestyle="--")
-    axs[0, 1].set_ylabel(f"RI({label_b})")
+    axs[0, 1].plot(frequencies, real_b, color="red")
+    axs[0, 1].set_ylabel(f"Real({label_b})")
     axs[0, 1].set_xlabel("Freq, Hz")
     axs[0, 1].grid()
 
-    axs[1, 0].plot(frequencies, real_c, label="Real", color="blue")
-    axs[1, 0].plot(frequencies, imag_c, label="Imag", color="red", linestyle="--")
-    axs[1, 0].set_ylabel(f"RI({label_c})")
+    axs[1, 0].plot(frequencies, real_c, color="red")
+    axs[1, 0].set_ylabel(f"Real({label_c})")
     axs[1, 0].set_xlabel("Freq, Hz")
     axs[1, 0].grid()
 
-    axs[1, 1].plot(frequencies, real_d, label="Real", color="blue")
-    axs[1, 1].plot(frequencies, imag_d, label="Imag", color="red", linestyle="--")
-    axs[1, 1].set_ylabel(f"RI({label_d})")
+    axs[1, 1].plot(frequencies, real_d, color="red")
+    axs[1, 1].set_ylabel(f"Real({label_d})")
     axs[1, 1].set_xlabel("Freq, Hz")
     axs[1, 1].grid()
 
@@ -124,6 +120,40 @@ def plot_RI_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, par
     real_b.clear()
     real_c.clear()
     real_d.clear()
+
+    plt.show()
+
+def plot_imag_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d, type_of_parameters):
+    label_a, label_b, label_c, label_d = labels[type_of_parameters]
+
+    imag_a = extract_imag_part(parameter_a)
+    imag_b = extract_imag_part(parameter_b)
+    imag_c = extract_imag_part(parameter_c)
+    imag_d = extract_imag_part(parameter_d)
+
+    fig, axs = plt.subplots(2, 2, figsize=(12, 8))
+    fig.suptitle(f"Imag vs Freq ({type_of_parameters} Parameters)", fontsize=16)
+
+    axs[0, 0].plot(frequencies, imag_a, color="red")
+    axs[0, 0].set_ylabel(f"Imag({label_a})")
+    axs[0, 0].set_xlabel("Freq, Hz")
+    axs[0, 0].grid()
+
+    axs[0, 1].plot(frequencies, imag_b, color="red")
+    axs[0, 1].set_ylabel(f"Imag({label_b})")
+    axs[0, 1].set_xlabel("Freq, Hz")
+    axs[0, 1].grid()
+
+    axs[1, 0].plot(frequencies, imag_c, color="red")
+    axs[1, 0].set_ylabel(f"Imag({label_c})")
+    axs[1, 0].set_xlabel("Freq, Hz")
+    axs[1, 0].grid()
+
+    axs[1, 1].plot(frequencies, imag_d, color="red")
+    axs[1, 1].set_ylabel(f"Imag({label_d})")
+    axs[1, 1].set_xlabel("Freq, Hz")
+    axs[1, 1].grid()
+
     imag_a.clear()
     imag_b.clear()
     imag_c.clear()
@@ -240,8 +270,12 @@ def phase_in_degrees(parameter):
 
     return phase_degrees
 
-def extract_real_imag(parameter):
+def extract_real_part(parameter):
     real_part = [np.real(x) for x in parameter]
+
+    return real_part
+
+def extract_imag_part(parameter):
     imag_part = [np.imag(x) for x in parameter]
 
-    return real_part, imag_part
+    return imag_part

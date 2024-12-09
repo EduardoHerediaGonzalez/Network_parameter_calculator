@@ -406,12 +406,15 @@ def plot_parameters():
         plot_phase_vs_frequency(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d, parameters_to_calculate)
 
     elif format_to_plot == cfg.PLOT_FORMATS[2]:
-        plot_RI_vs_frequency(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d, parameters_to_calculate)
+        plot_real_vs_frequency(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d, parameters_to_calculate)
 
     elif format_to_plot == cfg.PLOT_FORMATS[3]:
-        plot_polar(parameter_a, parameter_b, parameter_c, parameter_d, parameters_to_calculate)
+        plot_imag_vs_frequency(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d, parameters_to_calculate)
 
     elif format_to_plot == cfg.PLOT_FORMATS[4]:
+        plot_polar(parameter_a, parameter_b, parameter_c, parameter_d, parameters_to_calculate)
+
+    elif format_to_plot == cfg.PLOT_FORMATS[5]:
         plot_smith_chart(parameter_a, parameter_b, parameter_c, parameter_d, parameters_to_calculate)
 
     reset_plot_parameters_combobox.set('')
