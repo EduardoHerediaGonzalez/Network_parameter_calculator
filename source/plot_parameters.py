@@ -1,19 +1,15 @@
 import matplotlib.pyplot as plt
 import skrf as rf
+import source.config_parameters as cfg
 
 from source.network_parameter_conversions import *
 
-labels = {"ABCD": ("A", "B", "C", "D"),
-          "Z": ("z11", "z12", "z21", "z22"),
-          "Y": ("y11", "y12", "y21", "y22"),
-          "S": ("s11", "s12", "s21", "s22")}
+labels = {"ABCD": ["A", "B", "C", "D"],
+          "Z": ["Z(1,1)", "Z(1,2)", "Z(2,1)", "Z(2,2)"],
+          "Y": ["Y(1,1)", "Y(1,2)", "Y(2,1)", "Y(2,2)"],
+          "S": ["S(1,1)", "S(1,2)", "S(2,1)", "S(2,2)"]}
 
-smith_labels = {"ABCD": ["s11 (A)", "s12 (B)", "s21 (C)", "s22 (D)"],
-                "Z": ["s11 (z11)", "s12 (z12)", "s21 (z21)", "s22 (z22)"],
-                "Y": ["s11 (y11)", "s12 (y12)", "s21 (y21)", "s22 (y22)"],
-                "S": ["s11", "s12", "s21", "s22"]}
-
-def plot_magnitude_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d, type_of_parameters):
+def plot_dB_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d, type_of_parameters):
     label_a, label_b, label_c, label_d = labels[type_of_parameters]
 
     parameter_a_db = [magnitude_in_db(A) for A in parameter_a]
@@ -21,28 +17,33 @@ def plot_magnitude_vs_frequency(frequencies, parameter_a, parameter_b, parameter
     parameter_c_db = [magnitude_in_db(C) for C in parameter_c]
     parameter_d_db = [magnitude_in_db(D) for D in parameter_d]
 
-    fig, axs = plt.subplots(2, 2, figsize=(12, 8), sharex=True)
-    fig.suptitle(f"Magnitude in dB vs Frequency ({type_of_parameters} Parameters)", fontsize=16)
+    fig, axs = plt.subplots(2, 2, figsize=(12, 8))
+    fig.suptitle(f"dB vs Freq ({type_of_parameters} Parameters)", fontsize=16)
 
-    axs[0, 0].plot(frequencies, parameter_a_db, label=f"Magnitude ({label_a})", color="blue")
-    axs[0, 0].set_title(f"{label_a}")
-    axs[0, 0].set_ylabel("Magnitude (dB)")
+    axs[0, 0].plot(frequencies, parameter_a_db, color="red")
+    axs[0, 0].set_ylabel(f"dB({label_a})")
+    axs[0, 0].set_xlabel("Freq, Hz")
     axs[0, 0].grid()
 
-    axs[0, 1].plot(frequencies, parameter_b_db, label=f"Magnitude ({label_b})", color="orange")
-    axs[0, 1].set_title(f"{label_b}")
+    axs[0, 1].plot(frequencies, parameter_b_db, color="red")
+    axs[0, 1].set_ylabel(f"dB({label_b})")
+    axs[0, 1].set_xlabel("Freq, Hz")
     axs[0, 1].grid()
 
-    axs[1, 0].plot(frequencies, parameter_c_db, label=f"Magnitude ({label_c})", color="green")
-    axs[1, 0].set_title(f"{label_c}")
-    axs[1, 0].set_xlabel("Frequency (Hz)")
-    axs[1, 0].set_ylabel("Magnitude (dB)")
+    axs[1, 0].plot(frequencies, parameter_c_db, color="red")
+    axs[1, 0].set_ylabel(f"dB({label_c})")
+    axs[1, 0].set_xlabel("Freq, Hz")
     axs[1, 0].grid()
 
-    axs[1, 1].plot(frequencies, parameter_d_db, label=f"Magnitude ({label_d})", color="red")
-    axs[1, 1].set_title(f"{label_d}")
-    axs[1, 1].set_xlabel("Frequency (Hz)")
+    axs[1, 1].plot(frequencies, parameter_d_db, color="red")
+    axs[1, 1].set_ylabel(f"dB({label_d})")
+    axs[1, 1].set_xlabel("Freq, Hz")
     axs[1, 1].grid()
+
+    parameter_a_db.clear()
+    parameter_b_db.clear()
+    parameter_c_db.clear()
+    parameter_d_db.clear()
 
     plt.show()
 
@@ -54,32 +55,37 @@ def plot_phase_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, 
     phase_c = [phase_in_degrees(x) for x in parameter_c]
     phase_d = [phase_in_degrees(x) for x in parameter_d]
 
-    fig, axs = plt.subplots(2, 2, figsize=(12, 8), sharex=True)
-    fig.suptitle("Phase in Degrees vs Frequency", fontsize=16)
+    fig, axs = plt.subplots(2, 2, figsize=(12, 8))
+    fig.suptitle(f"Phase vs Freq ({type_of_parameters} Parameters)", fontsize=16)
 
-    axs[0, 0].plot(frequencies, phase_a, label=f"Phase ({label_a})", color="blue")
-    axs[0, 0].set_title(f"{label_a}")
-    axs[0, 0].set_ylabel("Phase (°)")
+    axs[0, 0].plot(frequencies, phase_a, color="red")
+    axs[0, 0].set_ylabel(f"Phase({label_a})")
+    axs[0, 0].set_xlabel("Freq, Hz")
     axs[0, 0].grid()
 
-    axs[0, 1].plot(frequencies, phase_b, label=f"Phase ({label_b})", color="orange")
-    axs[0, 1].set_title(f"{label_b}")
+    axs[0, 1].plot(frequencies, phase_b, color="red")
+    axs[0, 1].set_ylabel(f"Phase ({label_b})")
+    axs[0, 1].set_xlabel("Freq, Hz")
     axs[0, 1].grid()
 
-    axs[1, 0].plot(frequencies, phase_c, label=f"Phase ({label_c})", color="green")
-    axs[1, 0].set_title(f"{label_c}")
-    axs[1, 0].set_xlabel("Frequency (Hz)")
-    axs[1, 0].set_ylabel("Phase (°)")
+    axs[1, 0].plot(frequencies, phase_c, color="red")
+    axs[1, 0].set_ylabel(f"Phase ({label_c})")
+    axs[1, 0].set_xlabel("Freq, Hz")
     axs[1, 0].grid()
 
-    axs[1, 1].plot(frequencies, phase_d, label=f"Phase ({label_d})", color="red")
-    axs[1, 1].set_title(f"{label_d}")
-    axs[1, 1].set_xlabel("Frequency (Hz)")
+    axs[1, 1].plot(frequencies, phase_d, color="red")
+    axs[1, 1].set_ylabel(f"Phase ({label_d})")
+    axs[1, 1].set_xlabel("Freq, Hz")
     axs[1, 1].grid()
+
+    phase_a.clear()
+    phase_b.clear()
+    phase_c.clear()
+    phase_d.clear()
 
     plt.show()
 
-def plot_r_i_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d, type_of_parameters):
+def plot_RI_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, parameter_d, type_of_parameters):
     label_a, label_b, label_c, label_d = labels[type_of_parameters]
 
     real_a, imag_a = extract_real_imag(parameter_a)
@@ -87,36 +93,41 @@ def plot_r_i_vs_frequency(frequencies, parameter_a, parameter_b, parameter_c, pa
     real_c, imag_c = extract_real_imag(parameter_c)
     real_d, imag_d = extract_real_imag(parameter_d)
 
-    fig, axs = plt.subplots(2, 2, figsize=(12, 8), sharex=True)
-    fig.suptitle("Real and Imaginary Parts vs Frequency", fontsize=16)
+    fig, axs = plt.subplots(2, 2, figsize=(12, 8))
+    fig.suptitle(f"RI vs Freq ({type_of_parameters} Parameters)", fontsize=16)
 
     axs[0, 0].plot(frequencies, real_a, label="Real", color="blue")
     axs[0, 0].plot(frequencies, imag_a, label="Imag", color="red", linestyle="--")
-    axs[0, 0].set_title(f"{label_a}")
-    axs[0, 0].legend()
+    axs[0, 0].set_ylabel(f"RI ({label_a})")
+    axs[0, 0].set_xlabel("Freq, Hz")
     axs[0, 0].grid()
 
     axs[0, 1].plot(frequencies, real_b, label="Real", color="blue")
     axs[0, 1].plot(frequencies, imag_b, label="Imag", color="red", linestyle="--")
-    axs[0, 1].set_title(f"{label_b}")
-    axs[0, 1].legend()
+    axs[0, 1].set_ylabel(f"RI({label_b})")
+    axs[0, 1].set_xlabel("Freq, Hz")
     axs[0, 1].grid()
 
     axs[1, 0].plot(frequencies, real_c, label="Real", color="blue")
     axs[1, 0].plot(frequencies, imag_c, label="Imag", color="red", linestyle="--")
-    axs[1, 0].set_title(f"{label_c}")
-    axs[1, 0].legend()
+    axs[1, 0].set_ylabel(f"RI({label_c})")
+    axs[1, 0].set_xlabel("Freq, Hz")
     axs[1, 0].grid()
 
     axs[1, 1].plot(frequencies, real_d, label="Real", color="blue")
     axs[1, 1].plot(frequencies, imag_d, label="Imag", color="red", linestyle="--")
-    axs[1, 1].set_title(f"{label_d}")
-    axs[1, 1].legend()
+    axs[1, 1].set_ylabel(f"RI({label_d})")
+    axs[1, 1].set_xlabel("Freq, Hz")
     axs[1, 1].grid()
 
-    for ax in axs.flat:
-        ax.set_xlabel("Frequency (Hz)")
-        ax.set_ylabel("Amplitude")
+    real_a.clear()
+    real_b.clear()
+    real_c.clear()
+    real_d.clear()
+    imag_a.clear()
+    imag_b.clear()
+    imag_c.clear()
+    imag_d.clear()
 
     plt.show()
 
@@ -135,32 +146,33 @@ def plot_polar(parameter_a, parameter_b, parameter_c, parameter_d, type_of_param
     magnitude_d = np.abs(parameter_d)
     phase_d = np.angle(parameter_d, deg=True)
 
-    fig, axs = plt.subplots(2, 2, figsize=(12, 12), subplot_kw={'projection': 'polar'})
-    fig.suptitle(f"Polar Plots of {type_of_parameters} Parameters", fontsize=16)
+    fig, axs = plt.subplots(2, 2, figsize=(12, 8), subplot_kw={'projection': 'polar'})
+    fig.suptitle(f"Polar ({type_of_parameters} Parameters)", fontsize=16)
 
-    axs[0, 0].plot(np.radians(phase_a), magnitude_a, label=f"({label_a})", color="blue")
-    axs[0, 0].set_title(f"({label_a})")
+    axs[0, 0].plot(np.radians(phase_a), magnitude_a, color="red")
+    axs[0, 0].set_ylabel(f"{label_c}")
     axs[0, 0].grid(True)
 
-    axs[0, 1].plot(np.radians(phase_b), magnitude_b, label=f"({label_b})", color="green")
-    axs[0, 1].set_title(f"({label_b})")
+
+    axs[0, 1].plot(np.radians(phase_b), magnitude_b, color="red")
+    axs[0, 1].set_ylabel(f"{label_b}")
     axs[0, 1].grid(True)
 
-    axs[1, 0].plot(np.radians(phase_c), magnitude_c, label=f"({label_c})", color="red")
-    axs[1, 0].set_title(f"({label_c})")
+    axs[1, 0].plot(np.radians(phase_c), magnitude_c, color="red")
+    axs[1, 0].set_ylabel(f"{label_c}")
     axs[1, 0].grid(True)
 
-    axs[1, 1].plot(np.radians(phase_d), magnitude_d, label=f"({label_d})", color="purple")
-    axs[1, 1].set_title(f"({label_d})")
+    axs[1, 1].plot(np.radians(phase_d), magnitude_d, color="red")
+    axs[1, 1].set_ylabel(f"{label_d}")
     axs[1, 1].grid(True)
 
     plt.show()
 
-def plot_smith_chart(parameter_a, parameter_b, parameter_c, parameter_d, type_of_parameters, z_0=50):
+def plot_smith_chart(parameter_a, parameter_b, parameter_c, parameter_d, type_of_parameters, z_0=cfg.CHARACTERISTIC_IMPEDANCE_50_OHMS):
     s_parameters_a = parameter_a
     s_parameters_b = parameter_b
     s_parameters_c = parameter_c
-    s_parameters_d = parameter_c
+    s_parameters_d = parameter_d
 
     if type_of_parameters != "S":
         for a, b, c, d in zip(parameter_a, parameter_b, parameter_c, parameter_d):
@@ -194,39 +206,26 @@ def plot_smith_chart(parameter_a, parameter_b, parameter_c, parameter_d, type_of
                 s_parameters_c.append(s_matrix[1, 0])  # S21
                 s_parameters_d.append(s_matrix[1, 1])  # S22
 
-        print("Enters conversion to S")
-
-    else:
-        s_parameters_a = parameter_a
-        s_parameters_b = parameter_b
-        s_parameters_c = parameter_c
-        s_parameters_d = parameter_d
-        print("Does not enter conversion to S")
-
-    label_a, label_b, label_c, label_d = smith_labels[type_of_parameters]
+    label_a, label_b, label_c, label_d = labels[type_of_parameters]
 
     fig, axs = plt.subplots(2, 2, figsize=(12, 8))
-    fig.suptitle(f"Smith Chart for {type_of_parameters} Parameters", fontsize=16)
+    fig.suptitle(f"Smith Chart ({type_of_parameters} Parameters)", fontsize=16)
 
     ax = axs[0, 0]
-    rf.plotting.plot_smith(s=np.array(s_parameters_a), ax=ax, label=f"({label_a})", color="blue")
-    ax.set_title(f"({label_a})")
-    ax.legend()
+    rf.plotting.plot_smith(s=np.array(s_parameters_a), ax=ax, color="red", x_label='', y_label='', title='')
+    axs[0, 0].set_ylabel(f"{label_a}")
 
     ax = axs[0, 1]
-    rf.plotting.plot_smith(s=np.array(s_parameters_b), ax=ax, label=f"({label_b})", color="orange")
-    ax.set_title(f"({label_b})")
-    ax.legend()
+    rf.plotting.plot_smith(s=np.array(s_parameters_b), ax=ax, color="red", x_label='', y_label='', title='')
+    axs[0, 1].set_ylabel(f"{label_b}")
 
     ax = axs[1, 0]
-    rf.plotting.plot_smith(s=np.array(s_parameters_c), ax=ax, label=f"({label_c})", color="green")
-    ax.set_title(f"({label_c})")
-    ax.legend()
+    rf.plotting.plot_smith(s=np.array(s_parameters_c), ax=ax, color="red", x_label='', y_label='', title='')
+    axs[1, 0].set_ylabel(f"{label_c}")
 
     ax = axs[1, 1]
-    rf.plotting.plot_smith(s=np.array(s_parameters_d), ax=ax, label=f"({label_d})", color="red")
-    ax.set_title(f"({label_d})")
-    ax.legend()
+    rf.plotting.plot_smith(s=np.array(s_parameters_d), ax=ax, color="red", x_label='', y_label='', title='')
+    axs[1, 1].set_ylabel(f"{label_d}")
 
     plt.show()
 

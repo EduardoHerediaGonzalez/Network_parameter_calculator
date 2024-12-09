@@ -5,7 +5,6 @@ from tkinter import messagebox
 from tkinter import ttk
 
 import pandas as pd
-from openpyxl import *
 
 from source.common_two_port_circuits import *
 from source.excel_sheet_format import *
@@ -25,7 +24,6 @@ sub_networks = list()
 sub_networks_interconnection = list()
 frequency_range = list()
 add_touchstone_file_function_callback = False
-calculate_parameters_function_callback = False
 parameters_to_calculate = ''
 
 def add_touchstone_file():
@@ -37,7 +35,7 @@ def add_touchstone_file():
     if os.path.exists(touchstone_file_path):
         shutil.copy2(touchstone_file_path, os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.TXT_TOUCHSTONE_FILE_NAME))
 
-        data_frame = pd.read_csv(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.TXT_TOUCHSTONE_FILE_NAME), sep=',')
+        data_frame = pd.read_csv(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.TXT_TOUCHSTONE_FILE_NAME))
         data_frame.to_excel(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.EXCEL_TOUCHSTONE_FILE_NAME), index=False)
         os.remove(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.TXT_TOUCHSTONE_FILE_NAME))
 
@@ -184,7 +182,7 @@ def add_sub_network():
             save_sub_networks_button.config(state='normal')
 
         reset_type_of_circuit_combobox.set('')
-        reset_type_of_connection_combobox.set('')
+        reset_type_of_interconnection_combobox.set('')
         reset_element_A_combobox.set('')
         reset_element_A_entry.set('')
         reset_element_B_combobox.set('')
@@ -273,7 +271,8 @@ def calculate_parameters():
     global sub_networks
     global sub_networks_interconnection
     global parameters_to_calculate
-    global calculate_parameters_function_callback
+    convert_to_z_matrix_status = True
+    convert_to_y_matrix_status = True
 
     excel_ABCD_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_ABCD_PARAMETERS_SHEET]
     excel_Z_parameters_sheet = excel_network_parameters_workbook[cfg.EXCEL_Z_PARAMETERS_SHEET]
@@ -283,78 +282,84 @@ def calculate_parameters():
     parameters_to_calculate = parameters_to_calculate_combobox.get()
 
     if parameters_to_calculate != '':
-        if calculate_parameters_function_callback is False:
-            excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 4, column=cfg.EXCEL_COLUMN_B).value = cfg.DEFAULT_NETWORK_TYPE
-            excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 5, column=cfg.EXCEL_COLUMN_B).value = parameters_to_calculate
-            excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
+        excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 4, column=cfg.EXCEL_COLUMN_B).value = cfg.DEFAULT_NETWORK_TYPE
+        excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW + 5, column=cfg.EXCEL_COLUMN_B).value = parameters_to_calculate
+        excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
 
-            row_counter = cfg.EXCEL_INITIAL_ROW
+        if len(sub_networks) == 1:
+            type_of_circuit  = excel_network_info_sheet.cell(row=cfg.EXCEL_INITIAL_ROW_NETWORK_ID, column=cfg.EXCEL_COLUMN_C).value
 
-            for frequency in frequency_range:
-                total_ABCD_matrix = get_total_ABCD_matrix(at_frequency=frequency)
+            if type_of_circuit == cfg.CIRCUIT_TYPES[cfg.SERIES_IMPEDANCE_CIRCUIT_TYPE_INDEX]:
+                convert_to_z_matrix_status = False
+
+            elif type_of_circuit == cfg.CIRCUIT_TYPES[cfg.SHUNT_IMPEDANCE_CIRCUIT_TYPE_INDEX]:
+                convert_to_y_matrix_status = False
+
+        row_counter = cfg.EXCEL_INITIAL_ROW
+
+        for frequency in frequency_range:
+            total_ABCD_matrix = get_total_ABCD_matrix(at_frequency=frequency)
+            (parameter_a, parameter_b, parameter_c, parameter_d, delta) = get_parameters_and_delta_from_matrix(total_ABCD_matrix)
+            excel_ABCD_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency
+            excel_ABCD_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(parameter_a).strip('()')
+            excel_ABCD_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = str(parameter_b).strip('()')
+            excel_ABCD_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(parameter_c).strip('()')
+            excel_ABCD_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(parameter_d).strip('()')
+
+            if convert_to_z_matrix_status:
                 total_Z_matrix = convert_ABCD_matrix_to_Z_matrix(abcd_matrix=total_ABCD_matrix)
-                total_Y_matrix = convert_ABCD_matrix_to_Y_matrix(abcd_matrix=total_ABCD_matrix)
-                total_S_matrix = convert_ABCD_matrix_to_S_matrix(abcd_matrix=total_ABCD_matrix, z_0=50)
-
-                (parameter_a, parameter_b , parameter_c, parameter_d, delta) = get_parameters_and_delta_from_matrix(total_ABCD_matrix)
                 (parameter_z11, parameter_z12, parameter_z21, parameter_z22, delta) = get_parameters_and_delta_from_matrix(total_Z_matrix)
-                (parameter_y11, parameter_y12, parameter_y21, parameter_y22, delta) = get_parameters_and_delta_from_matrix(total_Y_matrix)
-                (parameter_s11, parameter_s12, parameter_s21, parameter_s22, delta) = get_parameters_and_delta_from_matrix(total_S_matrix)
-
-                excel_ABCD_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency
-                excel_ABCD_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(parameter_a).strip('()')
-                excel_ABCD_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = str(parameter_b).strip('()')
-                excel_ABCD_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(parameter_c).strip('()')
-                excel_ABCD_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(parameter_d).strip('()')
-
                 excel_Z_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency
                 excel_Z_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(parameter_z11).strip('()')
                 excel_Z_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = str(parameter_z12).strip('()')
                 excel_Z_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(parameter_z21).strip('()')
                 excel_Z_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(parameter_z22).strip('()')
 
+            if convert_to_y_matrix_status:
+                total_Y_matrix = convert_ABCD_matrix_to_Y_matrix(abcd_matrix=total_ABCD_matrix)
+                (parameter_y11, parameter_y12, parameter_y21, parameter_y22, delta) = get_parameters_and_delta_from_matrix(total_Y_matrix)
                 excel_Y_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency
                 excel_Y_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(parameter_y11).strip('()')
                 excel_Y_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = str(parameter_y12).strip('()')
                 excel_Y_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(parameter_y21).strip('()')
                 excel_Y_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(parameter_y22).strip('()')
 
-                excel_S_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency
-                excel_S_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(parameter_s11).strip('()')
-                excel_S_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = str(parameter_s12).strip('()')
-                excel_S_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(parameter_s21).strip('()')
-                excel_S_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(parameter_s22).strip('()')
+            total_S_matrix = convert_ABCD_matrix_to_S_matrix(abcd_matrix=total_ABCD_matrix, z_0=50)
+            (parameter_s11, parameter_s12, parameter_s21, parameter_s22, delta) = get_parameters_and_delta_from_matrix(total_S_matrix)
+            excel_S_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_A).value = frequency
+            excel_S_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_B).value = str(parameter_s11).strip('()')
+            excel_S_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_C).value = str(parameter_s12).strip('()')
+            excel_S_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_D).value = str(parameter_s21).strip('()')
+            excel_S_parameters_sheet.cell(row=row_counter, column=cfg.EXCEL_COLUMN_E).value = str(parameter_s22).strip('()')
 
-                row_counter = row_counter + 1
+            row_counter = row_counter + 1
 
-            star_cell = cfg.EXCEL_COLUMN_VALUE_TO_LETTER[cfg.EXCEL_COLUMN_A] + str(cfg.EXCEL_INITIAL_ROW)
-            end_cell = cfg.EXCEL_COLUMN_VALUE_TO_LETTER[cfg.EXCEL_COLUMN_E] + str(excel_ABCD_parameters_sheet.max_row)
-            column_width = 50
+        star_cell = cfg.EXCEL_COLUMN_VALUE_TO_LETTER[cfg.EXCEL_COLUMN_A] + str(cfg.EXCEL_INITIAL_ROW)
+        end_cell = cfg.EXCEL_COLUMN_VALUE_TO_LETTER[cfg.EXCEL_COLUMN_E] + str(excel_ABCD_parameters_sheet.max_row)
+        column_width = 50
 
-            apply_border_to_excel_sheet(start_cell=star_cell, end_cell=end_cell, to_sheet=excel_ABCD_parameters_sheet)
-            apply_cell_text_alignment(start_cell=star_cell, end_cell=end_cell, type_of_alignment='center', to_sheet=excel_ABCD_parameters_sheet)
-            adjust_columns_width_of_excel_sheet(columns=['B', 'C', 'D', 'E'], columns_width=[column_width, column_width, column_width, column_width], to_sheet=excel_ABCD_parameters_sheet)
+        apply_border_to_excel_sheet(start_cell=star_cell, end_cell=end_cell, to_sheet=excel_ABCD_parameters_sheet)
+        apply_cell_text_alignment(start_cell=star_cell, end_cell=end_cell, type_of_alignment='center', to_sheet=excel_ABCD_parameters_sheet)
+        adjust_columns_width_of_excel_sheet(columns=['B', 'C', 'D', 'E'], columns_width=[column_width, column_width, column_width, column_width], to_sheet=excel_ABCD_parameters_sheet)
 
-            apply_border_to_excel_sheet(start_cell=star_cell, end_cell=end_cell, to_sheet=excel_Z_parameters_sheet)
-            apply_cell_text_alignment(start_cell=star_cell, end_cell=end_cell, type_of_alignment='center', to_sheet=excel_Z_parameters_sheet)
-            adjust_columns_width_of_excel_sheet(columns=['B', 'C', 'D', 'E'], columns_width=[column_width, column_width, column_width, column_width], to_sheet=excel_Z_parameters_sheet)
+        apply_border_to_excel_sheet(start_cell=star_cell, end_cell=end_cell, to_sheet=excel_Z_parameters_sheet)
+        apply_cell_text_alignment(start_cell=star_cell, end_cell=end_cell, type_of_alignment='center', to_sheet=excel_Z_parameters_sheet)
+        adjust_columns_width_of_excel_sheet(columns=['B', 'C', 'D', 'E'], columns_width=[column_width, column_width, column_width, column_width], to_sheet=excel_Z_parameters_sheet)
 
-            apply_border_to_excel_sheet(start_cell=star_cell, end_cell=end_cell, to_sheet=excel_Y_parameters_sheet)
-            apply_cell_text_alignment(start_cell=star_cell, end_cell=end_cell, type_of_alignment='center', to_sheet=excel_Y_parameters_sheet)
-            adjust_columns_width_of_excel_sheet(columns=['B', 'C', 'D', 'E'], columns_width=[column_width, column_width, column_width, column_width], to_sheet=excel_Y_parameters_sheet)
+        apply_border_to_excel_sheet(start_cell=star_cell, end_cell=end_cell, to_sheet=excel_Y_parameters_sheet)
+        apply_cell_text_alignment(start_cell=star_cell, end_cell=end_cell, type_of_alignment='center', to_sheet=excel_Y_parameters_sheet)
+        adjust_columns_width_of_excel_sheet(columns=['B', 'C', 'D', 'E'], columns_width=[column_width, column_width, column_width, column_width], to_sheet=excel_Y_parameters_sheet)
 
-            apply_border_to_excel_sheet(start_cell=star_cell, end_cell=end_cell, to_sheet=excel_S_parameters_sheet)
-            apply_cell_text_alignment(start_cell=star_cell, end_cell=end_cell, type_of_alignment='center', to_sheet=excel_S_parameters_sheet)
-            adjust_columns_width_of_excel_sheet(columns=['B', 'C', 'D', 'E'], columns_width=[column_width, column_width, column_width, column_width], to_sheet=excel_S_parameters_sheet)
+        apply_border_to_excel_sheet(start_cell=star_cell, end_cell=end_cell, to_sheet=excel_S_parameters_sheet)
+        apply_cell_text_alignment(start_cell=star_cell, end_cell=end_cell, type_of_alignment='center', to_sheet=excel_S_parameters_sheet)
+        adjust_columns_width_of_excel_sheet(columns=['B', 'C', 'D', 'E'], columns_width=[column_width, column_width, column_width, column_width], to_sheet=excel_S_parameters_sheet)
 
-            excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
+        excel_network_parameters_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
 
-            calculate_parameters_function_callback = True
-
-            plot_parameters_button.config(state='normal')
-            plot_parameters_in_format_combobox.config(state='normal')
-            download_calculated_parameters_file_button.config(state='normal')
-            download_calculated_parameters_file_entry.config(state='normal')
+        plot_parameters_button.config(state='normal')
+        plot_parameters_in_format_combobox.config(state='normal')
+        download_calculated_parameters_file_button.config(state='normal')
+        download_calculated_parameters_file_entry.config(state='normal')
 
         reset_calculate_parameters_combobox.set('')
         messagebox.showinfo(title='Info', message='Parameters calculated')
@@ -395,13 +400,13 @@ def plot_parameters():
     format_to_plot = plot_parameters_in_format_combobox.get()
 
     if format_to_plot == cfg.PLOT_FORMATS[0]:
-        plot_magnitude_vs_frequency(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d, parameters_to_calculate)
+        plot_dB_vs_frequency(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d, parameters_to_calculate)
 
     elif format_to_plot == cfg.PLOT_FORMATS[1]:
         plot_phase_vs_frequency(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d, parameters_to_calculate)
 
     elif format_to_plot == cfg.PLOT_FORMATS[2]:
-        plot_r_i_vs_frequency(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d, parameters_to_calculate)
+        plot_RI_vs_frequency(frequency_range, parameter_a, parameter_b, parameter_c, parameter_d, parameters_to_calculate)
 
     elif format_to_plot == cfg.PLOT_FORMATS[3]:
         plot_polar(parameter_a, parameter_b, parameter_c, parameter_d, parameters_to_calculate)
@@ -415,24 +420,25 @@ def download_calculated_parameters_file():
     download_file_path = download_calculated_parameters_file_entry.get()
     excel_sheets_to_keep = list()
     excel_sheets_to_keep.append(cfg.EXCEL_NETWORK_INFO_SHEET)
+    excel_file_name = ''
 
-    shutil.copy2(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE), os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, 'temp.xlsx'))
-    excel_workbook = load_workbook(filename=os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, 'temp.xlsx'))
+    shutil.copy2(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE), os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_TEMPORAL_FILE_NAME))
+    excel_workbook = load_workbook(filename=os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_TEMPORAL_FILE_NAME))
 
     if os.path.exists(download_file_path):
-        if parameters_to_calculate == cfg.NETWORK_PARAMETERS[0]:
+        if parameters_to_calculate == cfg.NETWORK_PARAMETERS[cfg.Z_PARAMETERS_INDEX]:
             excel_file_name = cfg.EXCEL_Z_PARAMETERS_SHEET + cfg.EXCEL_EXTENSION
             excel_sheets_to_keep.append(cfg.EXCEL_Z_PARAMETERS_SHEET)
 
-        elif parameters_to_calculate == cfg.NETWORK_PARAMETERS[1]:
+        elif parameters_to_calculate == cfg.NETWORK_PARAMETERS[cfg.Y_PARAMETERS_INDEX]:
             excel_file_name = cfg.EXCEL_Y_PARAMETERS_SHEET + cfg.EXCEL_EXTENSION
             excel_sheets_to_keep.append(cfg.EXCEL_Y_PARAMETERS_SHEET)
 
-        elif parameters_to_calculate == cfg.NETWORK_PARAMETERS[2]:
+        elif parameters_to_calculate == cfg.NETWORK_PARAMETERS[cfg.ABCD_PARAMETERS_INDEX]:
             excel_file_name = cfg.EXCEL_ABCD_PARAMETERS_SHEET + cfg.EXCEL_EXTENSION
             excel_sheets_to_keep.append(cfg.EXCEL_ABCD_PARAMETERS_SHEET)
 
-        else:
+        elif parameters_to_calculate == cfg.NETWORK_PARAMETERS[cfg.S_PARAMETERS_INDEX]:
             excel_file_name = cfg.EXCEL_S_PARAMETERS_SHEET + cfg.EXCEL_EXTENSION
             excel_sheets_to_keep.append(cfg.EXCEL_S_PARAMETERS_SHEET)
 
@@ -443,11 +449,21 @@ def download_calculated_parameters_file():
                 excel_sheet_to_remove = excel_workbook[excel_sheet]
                 excel_workbook.remove(excel_sheet_to_remove)
 
-        excel_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, 'temp.xlsx'))
+        excel_workbook.save(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_TEMPORAL_FILE_NAME))
+        excel_workbook.close()
+        del excel_workbook
 
-        excel_file_path = os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, 'temp.xlsx')
+        excel_file_path = os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_TEMPORAL_FILE_NAME)
         shutil.copy2(excel_file_path, os.path.join(download_file_path, excel_file_name))
         os.remove(excel_file_path)
+
+        if add_touchstone_file_function_callback:
+            write_touchstone_file(network_parameters_workbook=excel_network_parameters_workbook)
+            df = pd.read_excel(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.EXCEL_TOUCHSTONE_FILE_NAME))
+            df.to_csv(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.TXT_TOUCHSTONE_FILE_NAME), index=False)
+            touchstone_file_name = cfg.TXT_TOUCHSTONE_FILE_NAME.split('.')[0] + cfg.TOUCHSTONE_EXTENSION
+            os.rename(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.TXT_TOUCHSTONE_FILE_NAME), os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, touchstone_file_name))
+            shutil.copy2(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, touchstone_file_name), download_file_path)
 
         reset_download_calculated_parameters_file_entry.set('')
         messagebox.showinfo(title='Info', message='Downloaded file successfully')
@@ -455,6 +471,72 @@ def download_calculated_parameters_file():
     else:
         reset_download_calculated_parameters_file_entry.set('')
         messagebox.showerror(title='Error', message='The download file path is not exist.')
+
+def new_circuit():
+    global excel_circuit_row_counter
+    global sub_networks
+    global sub_networks_interconnection
+    global frequency_range
+    global add_touchstone_file_function_callback
+    global parameters_to_calculate
+
+    excel_circuit_row_counter = cfg.EXCEL_INITIAL_ROW_NETWORK_ID
+    sub_networks.clear()
+    sub_networks_interconnection.clear()
+    frequency_range.clear()
+    add_touchstone_file_function_callback = False
+    parameters_to_calculate = ''
+    counter_of_sub_networks.set(0)
+
+    if os.path.exists(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE)):
+        os.remove(os.path.join(os.getcwd(), cfg.FOLDER_EXCEL_FILES, cfg.EXCEL_NETWORK_PARAMETERS_FILE))
+
+    if os.path.exists(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.EXCEL_TOUCHSTONE_FILE_NAME)):
+        os.remove(os.path.join(os.getcwd(), cfg.FOLDER_TOUCHSTONE_FILES, cfg.EXCEL_TOUCHSTONE_FILE_NAME))
+
+    # reset_type_of_circuit_combobox.set('')
+    # reset_type_of_interconnection_combobox.set('')
+    # reset_element_A_combobox.set('')
+    # reset_element_A_entry.set('')
+    # reset_element_B_combobox.set('')
+    # reset_element_B_entry.set('')
+    # reset_element_C_combobox.set('')
+    # reset_element_C_entry.set('')
+    # reset_transmission_line_length_entry.set('')
+    set_start_frequency_entry.set('')
+    set_end_frequency_entry.set('')
+    set_analysis_frequency_step_entry.set('')
+    start_frequency_combobox.set('')
+    end_frequency_combobox.set('')
+    analysis_frequency_step_combobox.set('')
+
+    type_of_circuit_combobox.config(state='normal')
+    type_of_interconnection_combobox.config(state='normal')
+    element_A_combobox.config(state='normal')
+    element_A_entry.config(state='normal')
+    element_B_combobox.config(state='normal')
+    element_B_entry.config(state='normal')
+    element_C_combobox.config(state='normal')
+    element_C_entry.config(state='normal')
+    transmission_line_length_entry.config(state='normal')
+    touchstone_file_button.config(state='normal')
+    touchstone_file_entry.config(state='normal')
+    add_sub_network_button.config(state='normal')
+
+    save_frequency_parameters_button.config(state='disable')
+    start_frequency_entry.config(state='disable')
+    start_frequency_combobox.config(state='disable')
+    end_frequency_entry.config(state='disable')
+    end_frequency_combobox.config(state='disable')
+    analysis_frequency_step_entry.config(state='disable')
+    analysis_frequency_step_combobox.config(state='disable')
+    save_frequency_parameters_button.config(state='disable')
+    calculate_parameters_button.config(state='disable')
+    parameters_to_calculate_combobox.config(state='disable')
+    plot_parameters_button.config(state='disable')
+    plot_parameters_in_format_combobox.config(state='disable')
+    download_calculated_parameters_file_button.config(state='disable')
+    download_calculated_parameters_file_entry.config(state='disable')
 
 def get_frequency_with_prefixed(frequency_value: float):
     frequency_value__length = len(str(int(frequency_value)))
@@ -610,11 +692,11 @@ def get_total_ABCD_matrix(at_frequency: float):
 
 mainWindow = tk.Tk()
 mainWindow.title("Two-port network parameter calculator")
-mainWindow.geometry('720x590')
+mainWindow.geometry('720x620')
 
 counter_of_sub_networks = tk.IntVar(mainWindow, 0)
 reset_type_of_circuit_combobox = tk.StringVar(mainWindow, '')
-reset_type_of_connection_combobox = tk.StringVar(mainWindow, '')
+reset_type_of_interconnection_combobox = tk.StringVar(mainWindow, '')
 reset_element_A_combobox = tk.StringVar(mainWindow, '')
 reset_element_A_entry = tk.StringVar(mainWindow, '')
 reset_element_B_combobox = tk.StringVar(mainWindow, '')
@@ -655,7 +737,7 @@ row = row + 1
 
 type_of_interconnection_label = ttk.Label(frame_1, text='Type of interconnection')
 type_of_interconnection_label.grid(row=row, column=0)
-type_of_interconnection_combobox = ttk.Combobox(frame_1, values=cfg.INTERCONNECTION_TYPES, state='normal', textvariable=reset_type_of_connection_combobox)
+type_of_interconnection_combobox = ttk.Combobox(frame_1, values=cfg.INTERCONNECTION_TYPES, state='normal', textvariable=reset_type_of_interconnection_combobox)
 type_of_interconnection_combobox.grid(row=row, column=1)
 type_of_interconnection_combobox.current()
 
@@ -735,6 +817,7 @@ frame_2.grid(row=row, column=0)
 spacer_5 = ttk.Label(frame_2)
 spacer_6 = ttk.Label(frame_2)
 spacer_7 = ttk.Label(frame_2)
+spacer_8 = ttk.Label(frame_2)
 
 row = row + 1
 
@@ -800,5 +883,14 @@ download_calculated_parameters_file_button = ttk.Button(frame_2, state='disable'
 download_calculated_parameters_file_button.grid(row=row, column=0)
 download_calculated_parameters_file_entry = ttk.Entry(frame_2, state='disable', textvariable=reset_download_calculated_parameters_file_entry)
 download_calculated_parameters_file_entry.grid(row=row, column=1)
+
+row = row + 1
+
+spacer_8.grid(row=row, column=0)
+
+row = row + 1
+
+new_circuit_button = ttk.Button(frame_2, state='normal', text='New circuit', command=new_circuit)
+new_circuit_button.grid(row=row, column=1)
 
 mainWindow.mainloop()
